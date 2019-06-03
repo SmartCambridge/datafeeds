@@ -1,0 +1,61 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;
+                                             charset=utf-8">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css"
+  integrity="sha512-M2wvCLH6DSRazYeZRIm1JnYyh22purTM+FDB5CsyxtQJYeKq83arPe5wgbNmcFXGqiSH2XR8dT/fJISVA1r/zQ=="
+  crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"
+  integrity="sha512-lInM/apFSqyy1o6s89K4iQUKg6ppXEgsVxT35HbzUupEVRh2Eu9Wdl4tHj7dZO0s1uvplcYGmt3498TtHq+log=="
+  crossorigin=""></script>
+
+    <!-- Evil hack - loads extracted stop information into 'regions' -->
+    <script type="text/javascript" src="all_sensors.js"></script>
+
+    <!-- Evil hack - loads extracted county boundaries into 'boundaries' -->
+    <script type="text/javascript" src="all_countlines.js"></script>
+
+    <script type="text/javascript">
+
+function init(){
+
+  var map = new L.Map('map');
+
+  var uoc = new
+    //L.TileLayer('http://map.cam.ac.uk/tiles/{z}/{x}/{y}.png',
+    L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {
+      attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a></a>',
+      maxZoom: 19
+    }
+  );
+
+  var cambridge = new L.LatLng(52.20038, 0.1197);
+  map.setView(cambridge, 9).addLayer(uoc);
+
+  console.log('About to draw sensors');
+
+  for (i = 0; i < all_sensors.length; ++i) {
+    var sensor = all_sensors[i];
+    if (sensor.location !== null) {
+        console.log(sensor.location)
+        L.marker([sensor.location.lat, sensor.location.long], {radius: 1, fillOpacity: 1, color: 'red'}).addTo(map)
+    }
+  }
+
+}
+
+    </script>
+    <title>Vivacity sensors</title>
+  </head>
+
+  <body onload="init()">
+
+    <div id="map" style="height: 1200px; border: 1px solid black;"></div>
+
+  </body>
+
+</html>
