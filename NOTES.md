@@ -1,0 +1,99 @@
+Vivacity notes
+==============
+
+'original' API
+--------------
+
+https://api.vivacitylabs.com/cambridge-mill-road/v1/counts?apikey=deSwbTn3duihqRLyvgfFGdvft2w28nhKthPWa
+
+### Outstanding questions
+
+1) Is there any documentation on what the data accessed by the API call
+represents? From inspection it seems to contain counts of various
+vehicle types (Car,Pedestrian,Cyclist,Motorbike,Bus,OGV1,OGV2,LGV) in
+two directions at each of 15 sensor locations, which look to match the
+information I can see in the portal. I have two immediate questions:
+
+    * What's the timescale and sampling interval for the counts? The data
+contains 'fromTime' and 'toTime' values but, if I'm interpreting them
+correctly, they vary in a way I don't understand and represent periods
+of between 3m50s and 5m0s.
+
+    * What do the counts represent? Vehicles passing a line? Vehicles in
+view? Something else?
+
+2) The API only gives access to 'current' information. Is it possible to
+access data that has already been collected? While we can arrange to
+sample and store this data ourselves for further analysis it would be
+better if we could prime our collection with everything that has been
+collected to date.
+
+4) These 15 sensors are not the only Vivacity sensors in Cambridge
+(there are at least some on Lensfield Road and a pair at the Grand
+Arcade car park entrance, and I think at least one at Milton and we are
+involved with each of these projects). Can we access to the data from
+these too?
+
+
+New API
+-------
+
+### Notes
+
+https://api.vivacitylabs.com/api-docs/
+
+16 sensors. One (`a355adca-66a6-11e9-a851-42010af00366`) has `'location':
+null, 'countlines': []` so is presumably not in use. One
+(`8e8e616c-6a6a-11e9-a71b-42010af00366`) lists two countlines. So 16
+countlines referenced.
+
+16 countlines. All direction 'both'.
+
+Only 14 countlines reporting data. `13082` (on sensor
+`ad7580b2-6806-11e9-bef4-42010af00366`) and `13083` (on
+`8e8e616c-6a6a-11e9-a71b-42010af00366`) seem to be missing.
+
+### Outstanding questions
+
+1) In the V1 API, countlines have a semi-human-readable "countlineId".
+Any chance of something similar in v2? Dito sensors?
+
+2) When a first or last 5 minute bucket is truncated because its star/end
+isn't aligned on a 5 minuet boundary, what do the returned counts represent?
+actual counts in the truncated time range, pro-rata counts from the entire
+5 minute count? Something else?
+
+3) The `/get-token` response includes a `refresh-token` field. Does this imply that
+tokens can be refreshed, and if so how?
+
+4) Countlines seem to have an 'in' and 'out' direction. How is this defined?
+
+5) We understand that these particular sensors don't support ANPR and therefore that the
+/journey-time endpoint won't have anything to report. Is that correct?
+
+6) How much past data can we access? The documentation says that for /counts
+the maximum time range allowed between "from" and "to" is 48 hours but can we
+use this to go back to when you started collecting data?
+
+7) We'd like to collect data from you to keep a local archive at the
+maximum time resolution possible. What's the best way for us to go about this?
+
+8) What do the various classes of vehicle actually mean? I've seen at least "bus",
+"car", "cyclist", "minibus", "motorbike", "pedestrian", "rigid", "taxi", "truck".
+"van".
+
+9) What do the returned counts represent? Vehicles crossing the countline
+in the period of the sample, or something wlse?
+
+### Bugs
+
+1) /counts `timerange` parameters seem to be ignored
+
+2) Submitting more than one countline to the /counts endpoint results in error
+500: countlineIds.split is not a function.
+
+3) Submitting more than one class to the /counts endpoint results in error
+500: classes.split is not a function.
+
+4) Any edit to the timerange parameter in the Swagger 'try it out' functionality
+causes the input box to go pink and the 'Execute' button to no longer function.
