@@ -1,1 +1,3 @@
 setup_env
+*.json
+*.js
