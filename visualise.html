@@ -44,7 +44,6 @@ function init(){
     accessToken: MB_ACCESS_TOKEN
   });
 
-
   var cambridge = new L.LatLng(52.20038, 0.1197);
   map.setView(cambridge, 15).addLayer(mb);
 
@@ -54,7 +53,18 @@ function init(){
   }
   L.control.layers(base_layers, {}, {collapsed: false}).addTo(map);
 
+  // Build a lookup index for countlines, and add the line's midpoint
+  var countline_index = {};
+  for (i = 0; i < all_countlines.length; ++i) {
+    var countline = all_countlines[i];
+    countline.location.middle =
+       {'lat': (countline.location.start.lat + countline.location.end.lat)/2,
+        'long': (countline.location.start.long + countline.location.end.long)/2};
+    countline_index[countline.id] = countline;
+  }
+
   sensors = L.featureGroup();
+  joinlines = L.featureGroup();
   var sensor_map = {};
 
   console.log('About to draw sensors');
@@ -62,7 +72,7 @@ function init(){
   for (i = 0; i < all_sensors.length; ++i) {
     var sensor = all_sensors[i];
     if (sensor.location !== null) {
-      console.log(sensor.location)
+      console.log(i, sensor.location)
       var key = sensor.location.lat + '|' + sensor.location.long;
       var countlines = sensor.countlines.join(', ');
       var desc = `Count: ${i}<br>Sensor: ${sensor.id}<br>Latitude: ${sensor.location.lat}<br>Longitude: ${sensor.location.long}<br>Countlines: ${countlines}`
@@ -75,7 +85,21 @@ function init(){
         marker = L.marker([sensor.location.lat, sensor.location.long], {radius: 1, fillOpacity: 1, color: 'red'});
         sensor_map[key] = marker;
         marker.bindPopup(desc);
-        marker.addTo(sensors)
+        marker.addTo(sensors);
+      }
+      console.log('countlines', sensor.countlines);
+      for (j=0; j < sensor.countlines.length; ++j) {
+        line = sensor.countlines[j];
+        console.log('line', line);
+        if (countline_index.hasOwnProperty(line)) {
+          countline = countline_index[line];
+          console.log('countline', countline);
+          L.polyline(
+            [ [sensor.location.lat, sensor.location.long],
+              [countline.location.middle.lat, countline.location.middle.long]
+            ], { color: 'black', weight: 1, dashArray: '4'}
+          ).addTo(joinlines);
+        }
       }
     }
   }
@@ -97,15 +121,15 @@ function init(){
     }
     else {
       var popup = L.featureGroup();
-      L.circle([countline.location.start.lat, countline.location.start.long],
-        {radius: 3, fillOpacity: 1, color: 'red'})
-        .addTo(popup);
-      L.circle([countline.location.end.lat, countline.location.end.long],
-        {radius: 3, fillOpacity: 1, color: 'green'})
-        .addTo(popup);
       L.polyline([[countline.location.start.lat, countline.location.start.long],
                 [countline.location.end.lat, countline.location.end.long]],
                 )
+        .addTo(popup);
+      L.circle([countline.location.start.lat, countline.location.start.long],
+        {radius: 1, fillOpacity: 1, color: 'red'})
+        .addTo(popup);
+      L.circle([countline.location.end.lat, countline.location.end.long],
+        {radius: 1, fillOpacity: 1, color: 'green'})
         .addTo(popup);
       countline_map[key] = popup;
       popup.bindPopup(desc);
@@ -113,7 +137,7 @@ function init(){
     }
   }
 
-  map.addLayer(sensors).addLayer(countlines);
+  map.addLayer(sensors).addLayer(countlines).addLayer(joinlines);
 
   map.fitBounds(sensors.getBounds());
 
