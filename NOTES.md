@@ -42,16 +42,20 @@ New API
 
 https://api.vivacitylabs.com/api-docs/
 
-16 sensors. One (`a355adca-66a6-11e9-a851-42010af00366`) has `'location':
-null, 'countlines': []` so is presumably not in use. One
-(`8e8e616c-6a6a-11e9-a71b-42010af00366`) lists two countlines. So 16
-countlines referenced.
+16 sensors:
+* One (`a355adca-66a6-11e9-a851-42010af00366`) has
+`'location': null, 'countlines': []` so is presumably not in use.
+* Two sensors (`8e8e616c-6a6a-11e9-a71b-42010af00366` and
+`ad757950-6806-11e9-bef4-42010af00366`) claim to be in identical
+locations on Newmarket Road
+* `8e8e616c-6a6a-11e9-a71b-42010af00366`) lists two countlines
+(`13083` and `13086`) both at identical locations on Perne Road.
 
 16 countlines. All direction 'both'.
 
-Only 14 countlines reporting data. `13082` (on sensor
-`ad7580b2-6806-11e9-bef4-42010af00366`) and `13083` (on
-`8e8e616c-6a6a-11e9-a71b-42010af00366`) seem to be missing.
+Only 14 countlines reporting data. These two are missing:
+* `13082` (on sensor `ad7580b2-6806-11e9-bef4-42010af00366` on Histon Road)
+* `13083` (mentioned above, on `8e8e616c-6a6a-11e9-a71b-42010af00366` on Perne Road).
 
 ### Outstanding questions
 
