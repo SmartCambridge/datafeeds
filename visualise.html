@@ -24,7 +24,7 @@ function init(){
 
   var map = new L.Map('map');
 
-  var uoc = new
+  var osm = new
     //L.TileLayer('http://map.cam.ac.uk/tiles/{z}/{x}/{y}.png',
     L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     {
@@ -33,18 +33,89 @@ function init(){
     }
   );
 
+  var MB_ACCESS_TOKEN =
+    'pk.eyJ1IjoianczNSIsImEiOiJjandnYjNxNmcwN2xyNDVsYnY2OGdpbHJkIn0.j8lHtHEZ3t5-pcuFnC6eWA';
+  var MB_URL = `https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}`;
+  var MB_ATTR = 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>'
+  var mb = L.tileLayer(MB_URL, {
+    attribution: MB_ATTR,
+    maxZoom: 22,
+    id: 'mapbox.streets',
+    accessToken: MB_ACCESS_TOKEN
+  });
+
+
   var cambridge = new L.LatLng(52.20038, 0.1197);
-  map.setView(cambridge, 9).addLayer(uoc);
+  map.setView(cambridge, 15).addLayer(mb);
+
+  var base_layers = {
+    'MapBox': mb,
+    'OSM': osm
+  }
+  L.control.layers(base_layers, {}, {collapsed: false}).addTo(map);
+
+  sensors = L.featureGroup();
+  var sensor_map = {};
 
   console.log('About to draw sensors');
 
   for (i = 0; i < all_sensors.length; ++i) {
     var sensor = all_sensors[i];
     if (sensor.location !== null) {
-        console.log(sensor.location)
-        L.marker([sensor.location.lat, sensor.location.long], {radius: 1, fillOpacity: 1, color: 'red'}).addTo(map)
+      console.log(sensor.location)
+      var key = sensor.location.lat + '|' + sensor.location.long;
+      var countlines = sensor.countlines.join(', ');
+      var desc = `Count: ${i}<br>Sensor: ${sensor.id}<br>Latitude: ${sensor.location.lat}<br>Longitude: ${sensor.location.long}<br>Countlines: ${countlines}`
+      if (sensor_map.hasOwnProperty(key)) {
+        marker = sensor_map[key];
+        popup = marker.getPopup();
+        popup.setContent(popup.getContent() + '<br><br>' + desc);
+      }
+      else {
+        marker = L.marker([sensor.location.lat, sensor.location.long], {radius: 1, fillOpacity: 1, color: 'red'});
+        sensor_map[key] = marker;
+        marker.bindPopup(desc);
+        marker.addTo(sensors)
+      }
     }
   }
+
+  countlines = L.featureGroup();
+  var countline_map = {};
+
+  console.log('About to draw countlines');
+
+  for (i = 0; i < all_countlines.length; ++i) {
+    var countline = all_countlines[i];
+    console.log(countline.id)
+    var key = countline.location.start.lat + '|' + countline.location.start.long + '|' + countline.location.end.lat + '|' + countline.location.end.long;
+    var desc = `Count: ${i}<br>Countline: ${countline.id}`;
+    if (countline_map.hasOwnProperty(key)) {
+      countline = countline_map[key];
+      popup = countline.getPopup();
+      popup.setContent(popup.getContent() + '<br><br>' + desc);
+    }
+    else {
+      var popup = L.featureGroup();
+      L.circle([countline.location.start.lat, countline.location.start.long],
+        {radius: 3, fillOpacity: 1, color: 'red'})
+        .addTo(popup);
+      L.circle([countline.location.end.lat, countline.location.end.long],
+        {radius: 3, fillOpacity: 1, color: 'green'})
+        .addTo(popup);
+      L.polyline([[countline.location.start.lat, countline.location.start.long],
+                [countline.location.end.lat, countline.location.end.long]],
+                )
+        .addTo(popup);
+      countline_map[key] = popup;
+      popup.bindPopup(desc);
+      popup.addTo(countlines);
+    }
+  }
+
+  map.addLayer(sensors).addLayer(countlines);
+
+  map.fitBounds(sensors.getBounds());
 
 }
 
