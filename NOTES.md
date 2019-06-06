@@ -137,3 +137,24 @@ Present:
 
 4) Any edit to the timerange parameter in the Swagger 'try it out' functionality
 causes the input box to go pink and the 'Execute' button to no longer function.
+
+### Vehicle classes
+
+```
+"label_map": {
+            "0": "pedestrian",
+            "1": "cyclist",
+            "2": "motorbike",
+            "3": "car",
+            "4": "taxi",
+            "5": "van",
+            "6": "minibus",
+            "7": "bus",
+            "8": "rigid",
+            "9": "truck",
+            "10": "emergency car",
+            "11": "emergency van",
+            "12": "fire engine"
+```
+
+
