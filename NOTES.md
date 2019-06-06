@@ -42,6 +42,25 @@ New API
 
 https://api.vivacitylabs.com/api-docs/
 
+```
+. setup_env
+TOKEN=`./get_token.py`
+http https://api.vivacitylabs.com/sensor "Authorization: Bearer $TOKEN" api-version:2.0.0 > all_sensors.json
+http https://api.vivacitylabs.com/countline "Authorization: Bearer $TOKEN" api-version:2.0.0 > all_countlines.json
+q > all_counts.json
+
+jq '. | length' all_sensors.json
+jq '. | length' all_countlines.json
+jq '. | length' all_counts.json
+
+jq  [.[].countlines]  all_sensors.json
+jq keys all_counts.json
+jq values all_counts.json
+jq [.[].id] all_countlines.json
+
+jq '..|.class?' all_counts.json | sort | uniq
+```
+
 16 sensors:
 * One (`a355adca-66a6-11e9-a851-42010af00366`) has
 `'location': null, 'countlines': []` so is presumably not in use.
@@ -56,6 +75,8 @@ locations on Newmarket Road
 Only 14 countlines reporting data. These two are missing:
 * `13082` (on sensor `ad7580b2-6806-11e9-bef4-42010af00366` on Histon Road)
 * `13083` (mentioned above, on `8e8e616c-6a6a-11e9-a71b-42010af00366` on Perne Road).
+
+
 
 ### Outstanding questions
 
@@ -87,7 +108,22 @@ maximum time resolution possible. What's the best way for us to go about this?
 "van".
 
 9) What do the returned counts represent? Vehicles crossing the countline
-in the period of the sample, or something wlse?
+in the period of the sample, or something else?
+
+10) Missing data/misplaced sensors (see above)
+
+11) If this API is to be callable from JAvaScript in third-party web pages
+then the endoints need to support CORS.
+
+### Conference call 2019-06-04
+
+Present:
+* Gemma Schroeder (CCC)
+* Michael Stevens (CCC)
+* Yang Lu (Vivacity CTO)
+* Sarah Chaillot (Vivactiy)
+* Benjamin Kilner (Vivacity, and ex-Cambridge?)
+* Julian ?? (Vivacity, API developer)
 
 ### Bugs
 
