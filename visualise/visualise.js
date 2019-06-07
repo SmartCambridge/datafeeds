@@ -63,11 +63,7 @@ function setup_map() {
     layer_control = L.control.layers(base_layers, overlay_layers, {collapsed: false}).addTo(map);
 
     // Clear any highlighting caused by clicking lines
-    map.on('click', function() {
-        if (hilighted_line !== null) {
-            hilighted_line.setStyle({color: NORMAL_COLOUR});
-        }
-    });
+    map.on('click', clear_line_highlight);
 
 }
 
@@ -149,11 +145,19 @@ function line_highlight(e) {
 
     var line = e.target;
 
-    if (hilighted_line !== null) {
-        hilighted_line.setStyle({color: NORMAL_COLOUR});
-    }
+    clear_line_highlight();
     line.setStyle({color: HILIGHT_COLOUR});
     hilighted_line = line;
+}
+
+// Clear any line highlight
+function clear_line_highlight() {
+
+    if (hilighted_line !== null) {
+        hilighted_line.setStyle({color: NORMAL_COLOUR});
+        hilighted_line  = null;
+    }
+
 }
 
 
