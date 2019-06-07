@@ -10,7 +10,7 @@ var JOURNEYS_URL = `https://drakewell02.drakewell.com/npmatchv2/exports/a/livejo
 var TO_MPH = 2.23694;
 
 // Style options for markers and lines
-var SITE_OPTIONS = {};
+var SITE_OPTIONS = { color: 'black', fillColor: 'green', fill: true, fillOpacity: 0.5, radius: 7 };
 var NORMAL_COLOUR = '#3388ff';
 var HILIGHT_COLOUR = 'red';
 var LINK_OPTIONS = { color: NORMAL_COLOUR };
@@ -101,7 +101,7 @@ function add_sites(sites) {
 
     for (var i = 0; i < sites.length; ++i) {
         var site = sites[i];
-        var marker = L.marker([site.location.lat, site.location.lng], SITE_OPTIONS);
+        var marker = L.circleMarker([site.location.lat, site.location.lng], SITE_OPTIONS);
         marker.properties = { 'site': site };
         marker.bindPopup(site_popup);
         marker.addTo(sites_layer);
