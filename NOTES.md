@@ -86,34 +86,43 @@ Any chance of something similar in v2? Dito sensors?
 2) When a first or last 5 minute bucket is truncated because its star/end
 isn't aligned on a 5 minuet boundary, what do the returned counts represent?
 actual counts in the truncated time range, pro-rata counts from the entire
-5 minute count? Something else?
+5 minute count? Something else? ANSWER: Actual counts for the time range.
 
 3) The `/get-token` response includes a `refresh-token` field. Does this imply that
-tokens can be refreshed, and if so how?
+tokens can be refreshed, and if so how? ANSWER: Yes, documentation to follow
 
 4) Countlines seem to have an 'in' and 'out' direction. How is this defined?
+ANSWER: The 'in' direction is clockwise around the start point (normally also
+towards the sensor, but that's not guaranteed)
 
 5) We understand that these particular sensors don't support ANPR and therefore that the
 /journey-time endpoint won't have anything to report. Is that correct?
+ANSWER: Yes (but note that individual sensors can track vehicles through
+their field of view and this data may be available)
 
 6) How much past data can we access? The documentation says that for /counts
 the maximum time range allowed between "from" and "to" is 48 hours but can we
-use this to go back to when you started collecting data?
+use this to go back to when you started collecting data? ANSWER: All data collected
 
 7) We'd like to collect data from you to keep a local archive at the
 maximum time resolution possible. What's the best way for us to go about this?
 
 8) What do the various classes of vehicle actually mean? I've seen at least "bus",
 "car", "cyclist", "minibus", "motorbike", "pedestrian", "rigid", "taxi", "truck".
-"van".
+"van". ANSWER: Definitive list is "pedestrian", "cyclist", "motorbike", "car",
+"taxi", "van", "minibus", "bus", "rigid", "truck", "emergency car", "emergency van",
+"fire engine".
 
 9) What do the returned counts represent? Vehicles crossing the countline
-in the period of the sample, or something else?
+in the period of the sample, or something else? ANSWER: Vehicles crossing
+the countline in the period.
 
 10) Missing data/misplaced sensors (see above)
 
 11) If this API is to be callable from JAvaScript in third-party web pages
 then the endoints need to support CORS.
+
+
 
 ### Conference call 2019-06-04
 
