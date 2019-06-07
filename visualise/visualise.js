@@ -83,14 +83,8 @@ function load_data() {
         var locations = locations_result[0];
         var journeys = journeys_result[0];
 
-        // Locations
-        for (var i = 0; i < locations.sites.length; ++i) {
-            var site = locations.sites[i];
-            var marker = L.marker([site.location.lat, site.location.lng], SITE_OPTIONS);
-            marker.properties = { 'site': site };
-            marker.bindPopup(site_popup);
-            marker.addTo(sites_layer);
-        }
+        // Sites
+        add_sites(locations.sites);
 
         // Links and Compound routes
         add_lines(locations.links, locations.sites, journeys, links_layer, LINK_OPTIONS);
@@ -103,6 +97,19 @@ function load_data() {
     });
 
 
+}
+
+
+// Helper function to draw  sites
+function add_sites(sites) {
+
+    for (var i = 0; i < sites.length; ++i) {
+        var site = sites[i];
+        var marker = L.marker([site.location.lat, site.location.lng], SITE_OPTIONS);
+        marker.properties = { 'site': site };
+        marker.bindPopup(site_popup);
+        marker.addTo(sites_layer);
+    }
 }
 
 
@@ -150,7 +157,7 @@ function line_highlight(e) {
 }
 
 
-// Find an object froma  list of objects by matching each objet's 'id'
+// Find an object from a list of objects by matching each object's 'id'
 // attribute with the supplied 'id'. Could build/use lookup tables instead?
 function find_object(list, id) {
 
