@@ -1,25 +1,28 @@
 // Javascript functions for displaying Bluetruth data
 
 /* eslint no-console: "off" */
-/*global $, L, DRAKEWELL_KEY, MB_ACCESS_TOKEN, TF_API_KEY */
-
-var LOCATIONS_URL = `https://drakewell02.drakewell.com/npmatchv2/exports/a/locations.asp?group=PORTSMOUTH_JT&key=${DRAKEWELL_KEY}`;
-var JOURNEYS_URL = `https://drakewell02.drakewell.com/npmatchv2/exports/a/livejourneytimes.asp?group=PORTSMOUTH_JT&key=${DRAKEWELL_KEY}`;
+/*global $, L, LOCATIONS_URL, JOURNEYS_URL, MB_ACCESS_TOKEN, TF_API_KEY */
 
 // m/sec to mph
 var TO_MPH = 2.23694;
 
 // Style options for markers and lines
-var SITE_OPTIONS = { color: 'black', fillColor: 'green', fill: true, fillOpacity: 0.5, radius: 7 };
+var SITE_OPTIONS = { color: 'black', fillColor: 'green', fill: true, fillOpacity: 0.5, radius: 7, pane: 'markerPane' };
 var NORMAL_COLOUR = '#3388ff';
-var HILIGHT_COLOUR = 'red';
-var LINK_OPTIONS = { color: NORMAL_COLOUR };
-var COMPOUND_ROUTE_OPTIONS = { color: NORMAL_COLOUR };
+var SLOW_COLOUR = 'red';
+var QUICK_COLOUR = 'green';
+var BROKEN_COLOUR = 'grey';
+
+var NORMAL_LINE = { weight: 5, offset: -3 };
+var HIGHLIGHT_LINE = { weight: 10, offset: -6 };
 
 // Misc script globals
 var map, sites_layer, links_layer, compound_routes_layer, layer_control;
 var hilighted_line = null;
 
+
+// Map link and compoundRoute ids onto the polylines representing them
+var line_map = {};
 
 // Initialise
 $(document).ready(function () {
@@ -32,9 +35,14 @@ $(document).ready(function () {
 // Setup the map environment
 function setup_map() {
 
-    map = new L.Map('map');
+    map = L.map('map');
 
-    // various map providers
+    // Various feature layers
+    sites_layer = L.featureGroup();
+    links_layer = L.featureGroup();
+    compound_routes_layer = L.featureGroup();
+
+    // Various map providers
     var osm = L.tileLayer.provider('OpenStreetMap.Mapnik');
     var mb = L.tileLayer.provider('MapBox', {
         id: 'mapbox.streets',
@@ -44,13 +52,7 @@ function setup_map() {
         apikey: TF_API_KEY
     });
 
-    sites_layer = L.featureGroup();
-    links_layer = L.featureGroup();
-    compound_routes_layer = L.featureGroup();
-
-    var cambridge = new L.LatLng(52.20038, 0.1197);
-    map.setView(cambridge, 15).addLayer(tf).addLayer(sites_layer).addLayer(links_layer);
-
+    // Layer control
     var base_layers = {
         'MapBox': mb,
         'OSM': osm,
@@ -62,36 +64,38 @@ function setup_map() {
     };
     layer_control = L.control.layers(base_layers, overlay_layers, {collapsed: false}).addTo(map);
 
-    // Clear any highlighting caused by clicking lines
+    // Handler to clear any highlighting caused by clicking lines
     map.on('click', clear_line_highlight);
+
+    // Centre on Cambridge and add default layers
+    var cambridge = new L.LatLng(52.20038, 0.1197);
+    map.setView(cambridge, 15).addLayer(tf).addLayer(sites_layer).addLayer(links_layer);
+
 
 }
 
 
-// Async load locations and current live journey times
+// Async load locations, annotate with auto-refreshing journey times
 function load_data() {
 
-    $.when(
-        $.get(LOCATIONS_URL),
-        $.get(JOURNEYS_URL)
-    ).done(function(locations_result, journeys_result) {
+    $.get(LOCATIONS_URL)
+        .done(function(locations) {
 
-        var locations = locations_result[0];
-        var journeys = journeys_result[0];
+            // Sites
+            add_sites(locations.sites);
 
-        // Sites
-        add_sites(locations.sites);
+            // Links and Compound routes
+            add_lines(locations.links, locations.sites, links_layer);
+            add_lines(locations.compoundRoutes, locations.sites, compound_routes_layer);
 
-        // Links and Compound routes
-        add_lines(locations.links, locations.sites, journeys, links_layer, LINK_OPTIONS);
-        add_lines(locations.compoundRoutes, locations.sites, journeys, compound_routes_layer, COMPOUND_ROUTE_OPTIONS);
+            // Scale map to fit
+            var region = sites_layer.getBounds().extend(links_layer);
+            map.fitBounds(region);
 
-        // Scale map to fit
-        var region = sites_layer.getBounds().extend(links_layer);
-        map.fitBounds(region);
+            // Load (and schedule for reload) journey times
+            load_journey_times();
 
-    });
-
+        });
 
 }
 
@@ -101,16 +105,17 @@ function add_sites(sites) {
 
     for (var i = 0; i < sites.length; ++i) {
         var site = sites[i];
-        var marker = L.circleMarker([site.location.lat, site.location.lng], SITE_OPTIONS);
+        var marker = L.circleMarker([site.location.lat, site.location.lng], SITE_OPTIONS)
+            .bindPopup(site_popup, {maxWidth: 500})
+            .addTo(sites_layer);
         marker.properties = { 'site': site };
-        marker.bindPopup(site_popup);
-        marker.addTo(sites_layer);
+
     }
 }
 
 
 // Helper function to draw links and compound routes
-function add_lines(lines, sites, journeys, layer, options) {
+function add_lines(lines, sites, layer) {
 
     for (var i = 0; i < lines.length; ++i) {
         var line = lines[i];
@@ -124,17 +129,72 @@ function add_lines(lines, sites, journeys, layer, options) {
             }
         }
 
-        var polyline = L.polyline(points, options);
-        polyline.properties = { 'line': line, 'journey': find_object(journeys, line.id) };
-        polyline.bindPopup(line_popup);
-        polyline.on('click', line_highlight);
-        polyline.addTo(layer);
+        var polyline = L.polyline(points, NORMAL_LINE)
+            .setStyle({color: NORMAL_COLOUR})
+            .bindPopup(line_popup, {maxWidth: 500})
+            .on('click', line_highlight)
+            .addTo(layer);
+        polyline.properties = { 'line': line };
 
-        // Add compound routes to the map individually, becasu they can overlap each other
+        // Remember the polyline for the future
+        line_map[line.id] = polyline;
+
+        // Add compound routes to the map individually, because they can overlap each other
         if (layer === compound_routes_layer) {
             layer_control.addOverlay(polyline, `Route: ${line.name}`);
         }
 
+    }
+
+}
+
+
+// Load journey times, annotate links and compound routes, and schedule to re-run
+function load_journey_times() {
+
+    console.log('(Re-)loading journey times');
+
+    $.get(JOURNEYS_URL)
+        .done(function(journeys){
+
+            for (var i = 0; i < journeys.length; ++i) {
+                var journey = journeys[i];
+                // get corresponding (poly)line
+                var line = line_map[journey.id];
+                line.properties['journey'] = journey;
+                update_line_colour(line);
+            }
+
+            // Re-schedule for a minute in the future
+            setTimeout(load_journey_times, 60000);
+
+        });
+
+}
+
+
+// Set line's colour based on corresponding journey's travelTime and
+// normalTravelTime
+function update_line_colour(line) {
+
+    if (line !== undefined) {
+        var journey = line.properties.journey;
+        // journeyTime missing
+        if (!journey.travelTime) {
+            line.setStyle({color: BROKEN_COLOUR});
+        }
+        // Worse than normal
+        else if (journey.travelTime > 1.1*journey.normalTravelTime) {
+            line.setStyle({color: SLOW_COLOUR});
+        }
+        // Better then normal
+        else if (journey.travelTime < 0.9*journey.normalTravelTime) {
+            line.setStyle({color: QUICK_COLOUR});
+        }
+        // Normal(ish)
+        else {
+            line.setStyle({color: NORMAL_COLOUR});
+        }
     }
 
 }
@@ -146,33 +206,21 @@ function line_highlight(e) {
     var line = e.target;
 
     clear_line_highlight();
-    line.setStyle({color: HILIGHT_COLOUR});
+    line.setStyle(HIGHLIGHT_LINE)
+        .setOffset(HIGHLIGHT_LINE.offset);
     hilighted_line = line;
 }
+
 
 // Clear any line highlight
 function clear_line_highlight() {
 
     if (hilighted_line !== null) {
-        hilighted_line.setStyle({color: NORMAL_COLOUR});
+        hilighted_line.setStyle(NORMAL_LINE)
+            .setOffset(NORMAL_LINE.offset);
         hilighted_line  = null;
     }
 
-}
-
-
-// Find an object from a list of objects by matching each object's 'id'
-// attribute with the supplied 'id'. Could build/use lookup tables instead?
-function find_object(list, id) {
-
-    for (var i = 0; i < list.length; ++i) {
-        var object = list[i];
-        if (object.id === id) {
-            return object;
-        }
-    }
-    console.log('Failed to find object with id ', id);
-    return undefined;
 }
 
 
@@ -201,6 +249,7 @@ function line_popup(polyline) {
                   `<tr><th>Description</th><tr>${line.description}</td></tr>` +
                   `<tr><th>Id</th><td>${line.id}</td></tr>` +
                   `<tr><th>Length</th><td>${line.length} m</td></tr>`;
+
     if (journey) {
         message += `<tr><th>Time</th><td>${journey.time} </dt></tr>` +
                    `<tr><th>Period</th><td>${journey.period} s</td></tr>`;
@@ -220,3 +269,17 @@ function line_popup(polyline) {
 
 }
 
+
+// Find an object from a list of objects by matching each object's 'id'
+// attribute with the supplied 'id'. Could build/use lookup tables instead?
+function find_object(list, id) {
+
+    for (var i = 0; i < list.length; ++i) {
+        var object = list[i];
+        if (object.id === id) {
+            return object;
+        }
+    }
+    console.log('Failed to find object with id ', id);
+    return undefined;
+}
