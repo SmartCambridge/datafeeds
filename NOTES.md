@@ -34,3 +34,11 @@ Extracting predefined locations from XML:
 xmlstarlet sel -N d=http://datex2.eu/schema/2/2_0 -t -m '//d:predefinedLocationName' -m "d:values" -v "d:value" -n predefinedlocations.xml
 ```
 
+## Outstanding questions
+
+1) Access to the Json format data for Cambridge?
+
+2) Is live ATC flow data available? If so, how? ANSWERED (Michael: it's an
+at-cost add-on that the County didn't purchase)
+
+3) Can we have a meeting to discuss raw data feeds?
