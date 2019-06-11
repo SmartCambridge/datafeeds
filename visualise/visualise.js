@@ -55,8 +55,8 @@ function setup_map() {
     // Layer control
     var base_layers = {
         'MapBox': mb,
-        'OSM': osm,
         'ThunderForest': tf,
+        'OSM': osm,
     };
     var overlay_layers = {
         'Sites': sites_layer,
@@ -67,10 +67,29 @@ function setup_map() {
     // Handler to clear any highlighting caused by clicking lines
     map.on('click', clear_line_highlight);
 
+    get_legend().addTo(map);
+
     // Centre on Cambridge and add default layers
     var cambridge = new L.LatLng(52.20038, 0.1197);
-    map.setView(cambridge, 15).addLayer(tf).addLayer(sites_layer).addLayer(links_layer);
+    map.setView(cambridge, 15).addLayer(mb).addLayer(sites_layer).addLayer(links_layer);
 
+
+}
+
+
+function get_legend() {
+
+    var legend = L.control({position: 'bottomleft'});
+    legend.onAdd = function () {
+        var div = L.DomUtil.create('div', 'info legend');
+        div.innerHTML = '<div class="leaflet-control-layers-expanded">' +
+            'GREEN: speed is at least 10% below normal<br>' +
+            'RED: speed is at least 10% above normal<br>' +
+            'Trafic drives on the left' +
+            '</div>';
+        return div;
+    };
+    return legend;
 
 }
 
