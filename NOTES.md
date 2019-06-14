@@ -42,3 +42,7 @@ xmlstarlet sel -N d=http://datex2.eu/schema/2/2_0 -t -m '//d:predefinedLocationN
 at-cost add-on that the County didn't purchase)
 
 3) Can we have a meeting to discuss raw data feeds?
+
+4) CCC's IDOX system seems to be getting TrafficFlow data at the individual sensors.
+Can we access that?
+
