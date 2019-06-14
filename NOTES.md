@@ -47,7 +47,8 @@ https://api.vivacitylabs.com/api-docs/
 TOKEN=`./get_token.py`
 http https://api.vivacitylabs.com/sensor "Authorization: Bearer $TOKEN" api-version:2.0.0 > all_sensors.json
 http https://api.vivacitylabs.com/countline "Authorization: Bearer $TOKEN" api-version:2.0.0 > all_countlines.json
-q > all_counts.json
+http https://api.vivacitylabs.com/counts "Authorization: Bearer $TOKEN" api-version:2 > latest_counts.json
+
 
 jq '. | length' all_sensors.json
 jq '. | length' all_countlines.json
@@ -78,7 +79,8 @@ Only 14 countlines reporting data. These two are missing:
 
 
 
-### Outstanding questions
+Outstanding questions
+---------------------
 
 1) In the V1 API, countlines have a semi-human-readable "countlineId".
 Any chance of something similar in v2? Dito sensors?
@@ -119,12 +121,13 @@ the countline in the period.
 
 10) Missing data/misplaced sensors (see above)
 
-11) If this API is to be callable from JAvaScript in third-party web pages
+11) If this API is to be callable from JavaScript in third-party web pages
 then the endoints need to support CORS.
 
 
 
-### Conference call 2019-06-04
+Conference call 2019-06-04
+--------------------------
 
 Present:
 * Gemma Schroeder (CCC)
@@ -134,7 +137,8 @@ Present:
 * Benjamin Kilner (Vivacity, and ex-Cambridge?)
 * Julian ?? (Vivacity, API developer)
 
-### Bugs
+Bugs
+----
 
 1) /counts `timerange` parameters seem to be ignored
 
@@ -147,7 +151,8 @@ Present:
 4) Any edit to the timerange parameter in the Swagger 'try it out' functionality
 causes the input box to go pink and the 'Execute' button to no longer function.
 
-### Vehicle classes
+Vehicle classes
+---------------
 
 ```
 "label_map": {
@@ -165,5 +170,14 @@ causes the input box to go pink and the 'Execute' button to no longer function.
             "11": "emergency van",
             "12": "fire engine"
 ```
+
+Date Ranges
+-----------
+
+Data started being recorded 2019-05-09 at about 13:00 (actually 12:05:00.000Z).
+
+S11_HISTONROAD_CAM003 broke 2019-05-21 and was fixed on 2019-06-11.
+
+
 
 
