@@ -473,13 +473,17 @@ Traffic Data
 
 Of these
 
-*   56 are of type 'TrafficFlow' containing a 'vehicleFlow'. 38 updated in the last few hours.
-    Many of these appear to be coming from the Drakewell 'Bluetruth' system.
-*   18 are of type 'TrafficConcentration' (all in 2015 or 2016) containing an 'occupancy'.
-    None updated since 2016, all 0.
+*   56 are of type 'TrafficFlow' containing a 'vehicleFlow' and with
+    location references found in the 'Predefined Locations' feeds for 'Traffic
+    Data Links' and 'Journey Time Sections'. 18 were last updated
+    in 2015 or 2016. The remaining 38 are being updated in near-realtime and correspond to
+    the positions of the Drakewell 'BlueTruth' sensors.
+*   18 are of type 'TrafficConcentration' with
+    location references found in the 'Predefined Locations' feeds for 'Traffic
+    Data Links' and 'Journey Time Sections'. All were last updated in 2015 or 2016 and containing an 'occupancy' value that is always 0.
 *   62 are of type 'TravelTimeValue' containing a 'travelTime', a 'freeFlowSpeed' (always 0),
-    and a 'freeFlowTravelTime' (always 0). 45 updated in the last few hours. Many/all
-    of these appear to be coming from the Drakewell 'Bluetruth' system.
+    and a 'freeFlowTravelTime' (always 0) and a location reference found in the 'Predefined Locations' feed for 'Traffic Data Section'. 45 updated in the last few hours. All
+    correspond to compound or normal (but not 'link') routes in the Drakewell 'BlueTruth' system.
 
 <omit>
 
@@ -1015,7 +1019,7 @@ location:
 * VMS: 182 positions ('Cambridgeshire Locations', probably relating to the AllVMS feed)
   Also contains 'numberOfCharacters', 'numberOfRows', 'vmsType'
 * Matrix: feed is empty
-* Journey Time Sections: 114 linear features (probably also relating to the TrafficData feed)
+* Journey Time Sections: 114 linear features. Identical data to that served under 'Traffic Data Links'
 * CCTV: 874 positions ('Cambridgeshire CCTV Locations', probably relating to the CCTV feed).
   Also contains 'cctvUri' with values of the form `http://www.cambsvoyager.com/cctvimage/CAMB-52538` though none seem to work
 
