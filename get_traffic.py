@@ -38,19 +38,13 @@ def run():
         occupancy = data_value.findtext('d2:occupancy', '-', ns)
 
         travel_time = data_value.findtext('d2:travelTime', '-', ns)
-        free_flow_speed = data_value.findtext('d2:freeFlowSpeed', '-', ns)
-        free_flow_travel_time = data_value.findtext('d2:freeFlowTravelTime', '-', ns)
 
-#        results.append({
-#            'type': type, 'time': time, 'location': location_ref,
-#            'vehicle_flow': vehicle_flow, 'occupancy': occupancy,
-#            'travel_time': travel_time})
+        results.append({
+           'type': type, 'time': time, 'location': location_ref,
+           'vehicle_flow': vehicle_flow, 'occupancy': occupancy,
+           'travel_time': travel_time})
 
-        if type == 'TravelTimeValue':
-            results.append({'location': location_ref})
-
-#    results.sort(key=lambda r: r['type'] + r['time'])
-    results.sort(key=lambda r: r['location'])
+    results.sort(key=lambda r: r['type'] + r['time'])
 
     print(tabulate(results, headers='keys'))
 
