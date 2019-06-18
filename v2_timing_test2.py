@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 
 '''
-
+Retrieve `steps` counts for `step` intervals centred on now and
+display the length of the count array (which indicates if any data)
+was actually returned.
 '''
 
 import datetime
-import json
 import os
 
 from collections import defaultdict
 
 import requests
 
-from deepdiff import DeepDiff
 
 username = os.getenv('USERNAME')
 password = os.getenv('PASSWORD')

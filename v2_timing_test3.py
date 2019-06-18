@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 '''
-
+Keep retrieving data for the current 5 minute bucket
 '''
 
 import datetime

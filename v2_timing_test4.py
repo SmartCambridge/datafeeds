@@ -109,13 +109,15 @@ def run():
     print("Initial from: ", first_counts['13074']['from'], start.isoformat())
     print("Initial to: ", first_counts['13074']['to'], end.isoformat())
 
-    for ctr in range(8):
+    for ctr in range(20):
 
-        time.sleep(15)
+        time.sleep(5)
 
         second_counts = get_counts(token, countlines=['13074'], start=start, end=end)
 
-        print(json.dumps(DeepDiff(first_counts, second_counts), indent=4))
+        print(ctr, ': ', json.dumps(DeepDiff(first_counts, second_counts), indent=4))
+
+        first_counts = second_counts
 
 
 if __name__ == '__main__':

@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
 '''
-
+From a given `start_time`, retrieve `steps` sequential counts
+each for time period `step` and add up the classified counts
+returned. Then retrieve what should be the counts for the
+entire period in one go and compare the two.
 '''
 
 import datetime
@@ -47,8 +50,6 @@ def get_counts(token, countlines=[], classes=[], start=None, end=None):
     if end:
         params['timeTo'] = end.isoformat(timespec='milliseconds') + 'Z'
 
-        print('start: ', start, 'end: ', end)
-
     r = requests.get(
         'https://api.vivacitylabs.com/counts',
         params=params,
@@ -66,8 +67,6 @@ def get_counts(token, countlines=[], classes=[], start=None, end=None):
         end = None
         counts = defaultdict(lambda: dict(countIn=0, countOut=0))
         for slice in slices.values():
-            #print(slice)
-            print('slice from: ', slice['from'], 'slice to: ', slice['to'])
             start = slice['from'] if start is None else min(start, slice['from'])
             end = slice['to'] if end is None else max(end, slice['to'])
             for count in slice['counts']:
@@ -90,14 +89,13 @@ def run():
     steps = 10
     step = datetime.timedelta(seconds=62)
 
-    # #1: get data in 1 minute steps from `start_time` to `end_time`
+    # #1: get data in `step` intervals `steps` times from `start_time` to `end_time`
 
     time = start_time
     result1 = {}
     for ctr in range(steps):
 
         counts = get_counts(token, countlines=['13074'], start=time, end=time+step)
-        # print(json.dumps(counts))
 
         for countline, line_data in counts.items():
             if countline not in result1:
@@ -116,20 +114,22 @@ def run():
 
         time += step
 
-    # #2: get the same data in a single step
+    # #2: get the same data in a single request
 
     result2 = get_counts(token, countlines=['13074'], start=start_time, end=start_time+(step*steps))
 
     print(json.dumps(result1, indent=4))
     print()
     print(json.dumps(result2, indent=4))
+    print()
 
     diff = DeepDiff(result2, result1)
     if diff:
-        print()
-        print("Differences")
+        print('Different')
         print()
         print(json.dumps(diff, indent=4))
+    else:
+        print('Identical')
 
 
 if __name__ == '__main__':
