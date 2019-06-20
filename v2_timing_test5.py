@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 '''
-
+Keep fetching counts for the same time interval which runs for 15 minutes
+from when the script starts. Report each time the returned count data changes.
 '''
 
 import datetime
-import json
 import os
 import time
 
@@ -14,7 +14,6 @@ from collections import defaultdict
 import requests
 
 from deepdiff import DeepDiff
-from dateutil.parser import parse
 
 username = os.getenv('USERNAME')
 password = os.getenv('PASSWORD')
@@ -95,29 +94,38 @@ def get_counts(token, countlines=[], classes=[], start=None, end=None):
 
 def run():
 
+    # Top of the next minute
+    start = ((datetime.datetime.now() + datetime.timedelta(minutes=1))
+             .replace(second=0, microsecond=0))
+    # 15 minutes later
+    end = start+datetime.timedelta(minutes=15)
+
+    pause = (start-datetime.datetime.now()).total_seconds()
+    print('Sleeping', pause, 'seconds to the top of the next minute')
+    time.sleep(pause)
+
     token = get_token()
 
-    now = datetime.datetime.now()
+    first_counts = get_counts(token, countlines=['13074'], start=start, end=end)
+    print('Start:', start.isoformat())
 
-    print("Now: ", now.isoformat())
+    next = start
+    while next < end:
 
-    first_counts = get_counts(token, countlines=['13074'])
-
-    start = parse(first_counts['13074']['from'])
-    end = parse(first_counts['13074']['to'])
-
-    print("Initial from: ", first_counts['13074']['from'], start.isoformat())
-    print("Initial to: ", first_counts['13074']['to'], end.isoformat())
-
-    for ctr in range(20):
-
-        time.sleep(5)
+        next += datetime.timedelta(seconds=5)
+        pause = (next-datetime.datetime.now()).total_seconds()
+        time.sleep(pause)
 
         second_counts = get_counts(token, countlines=['13074'], start=start, end=end)
 
-        print(ctr, ': ', json.dumps(DeepDiff(first_counts, second_counts), indent=4))
+        diff = DeepDiff(first_counts, second_counts)
+
+        if diff:
+            print('Change:', datetime.datetime.now().isoformat())
 
         first_counts = second_counts
+        # Refresh the token in case it times out
+        token = get_token()
 
 
 if __name__ == '__main__':
