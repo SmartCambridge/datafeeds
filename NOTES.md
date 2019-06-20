@@ -4,7 +4,7 @@ Vivacity notes
 'original' API
 --------------
 
-https://api.vivacitylabs.com/cambridge-mill-road/v1/counts?apikey=deSwbTn3duihqRLyvgfFGdvft2w28nhKthPWa
+https://api.vivacitylabs.com/cambridge-mill-road/v1/counts?apikey=<key>
 
 ### Outstanding questions
 
