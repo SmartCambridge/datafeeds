@@ -1,0 +1,13 @@
+// Copy this file as setup_env.js and edit to suite
+
+// API keys, etc, for the Drakewell visualiser
+
+// URLs (containing keys) for the relevant locations and livejourneytimes endpoints
+var LOCATIONS_URL = 'https://drakewell02.drakewell.com/npmatchv2/exports/a/locations.asp?group=<...>key=<...>';
+var JOURNEYS_URL = 'https://drakewell02.drakewell.com/npmatchv2/exports/a/livejourneytimes.asp?group=<...>&key=<...>';
+
+// API key for MapBox
+var MB_ACCESS_TOKEN = '';
+
+// API key for Thunderforest
+var TF_API_KEY = '';

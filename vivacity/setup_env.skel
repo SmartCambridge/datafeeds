@@ -1,0 +1,6 @@
+# Copy this file as setup_env and edit to suite
+
+# Credentials for access to the Vivacity API
+
+export USERNAME=
+export PASSWORD=
