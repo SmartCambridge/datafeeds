@@ -11,18 +11,6 @@ To leave out the 'omit' sections:
 awk '/<\/omit>/,/<omit>/' NOTES.md | grep -v 'omit>' > idox_summary.md
 ```
 
-For access to the DatexII feed:
-
-Uid : CambsUni
-Pwd : P8MSatsW9L3
-
-For access to the test site http://www.cambsvoyager.com/datexii/TestInterface.aspx :
-
-uid : Testaccess
-pwd : 5dhwRQ3y7WNcgLes
-
-Note that the test interface then needs DatexII feed ID/Pwd above.
-
 </omit>
 
 Available data
