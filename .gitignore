@@ -1,4 +1,2 @@
-*.json
-*.js
-*.xml
 setup_env
+setup_env.js
