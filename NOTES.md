@@ -6,14 +6,14 @@ The web portal at https://drakewell04.drakewell.com/ seems to work with the supp
 These examples seem to work:
 
 ```
-https://drakewell04.drakewell.com/datex2/datex2_predefinedlocations.asp?v=2.2&node=cambridge_jtms&key=644d6643127d494fad96f1a05357d1e0
-https://drakewell04.drakewell.com/datex2/datex2_trafficdata.asp?v=2.2&node=cambridge_jtms&key=644d6643127d494fad96f1a05357d1e0
+https://drakewell04.drakewell.com/datex2/datex2_predefinedlocations.asp?v=2.2&node=cambridge_jtms&key=<key>
+https://drakewell04.drakewell.com/datex2/datex2_trafficdata.asp?v=2.2&node=cambridge_jtms&key=<key>
 ```
 
 Based on 'Datex 2 & JSON API Information JTMS' document you might think
 
 ```
-https://drakewell02.drakewell.com/npmatchv2/exports/a/locations.asp?group=cambridge_jtms&key=644d6643127d494fad96f1a05357d1e0
+https://drakewell02.drakewell.com/npmatchv2/exports/a/locations.asp?group=cambridge_jtms&key=<key>
 ```
 
 would also work, but it gives
