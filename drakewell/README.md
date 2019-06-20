@@ -1,6 +1,11 @@
 Drakewell
 =========
 
+Also
+* Bluetooth
+* Datex
+* Datex2
+
 The web portal at https://drakewell04.drakewell.com/ seems to work with the supplied credentials. Unfortunatly the 'user Guide' link on the home page gives 'Access denied'.
 
 These examples seem to work:
