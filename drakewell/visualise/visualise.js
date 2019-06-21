@@ -11,14 +11,20 @@ var SITE_OPTIONS = { color: 'black', fillColor: 'green', fill: true, fillOpacity
 var NORMAL_COLOUR = '#3388ff';
 var SLOW_COLOUR = 'red';
 var QUICK_COLOUR = 'green';
-var BROKEN_COLOUR = 'grey';
+var BROKEN_COLOUR = '#BBB';
+
+var VERY_SLOW = '#9A111A';
+var SLOW = '#E00018';
+var MEDIUM = '#EB7F1B';
+var FAST = '#85CD50';
 
 var NORMAL_LINE = { weight: 5, offset: -3 };
 var HIGHLIGHT_LINE = { weight: 10, offset: -6 };
 
 // Misc script globals
-var map, sites_layer, links_layer, compound_routes_layer, layer_control;
+var map, sites_layer, links_layer, compound_routes_layer, layer_control, ledgend;
 var hilighted_line = null;
+var line_display = 'relative';
 
 
 // Map link and compoundRoute ids onto the polylines representing them
@@ -64,10 +70,12 @@ function setup_map() {
     };
     layer_control = L.control.layers(base_layers, overlay_layers, {collapsed: false}).addTo(map);
 
+    L.control.toggle().addTo(map);
+
     // Handler to clear any highlighting caused by clicking lines
     map.on('click', clear_line_highlight);
 
-    get_legend().addTo(map);
+    ledgend = get_legend().addTo(map);
 
     // Centre on Cambridge and add default layers
     var cambridge = new L.LatLng(52.20038, 0.1197);
@@ -82,18 +90,88 @@ function get_legend() {
     var legend = L.control({position: 'bottomleft'});
     legend.onAdd = function () {
         var div = L.DomUtil.create('div', 'info legend');
-        div.innerHTML = '<div class="leaflet-control-layers leaflet-control-layers-expanded">' +
-            'GREEN: speed is at least 10% below normal<br>' +
-            'RED: speed is at least 10% above normal<br>' +
-            'GREY: no speed reported<br>' +
-            'Trafic drives on the left. Updates every 60s.' +
-            '</div>';
+        if (line_display === 'relative') {
+            div.innerHTML = '<div class="leaflet-control-layers leaflet-control-layers-expanded">' +
+                'GREEN: speed is at least 20% above normal<br>' +
+                'BLUE: speed close to normal<br>' +
+                'RED: speed is at least 20% below normal<br>' +
+                'GREY: no speed reported<br>' +
+                'Trafic drives on the left. Updates every 60s.' +
+                '</div>';
+        }
+        else {
+            div.innerHTML = '<div class="leaflet-control-layers leaflet-control-layers-expanded">' +
+                'GREEN: above 20mph<br>' +
+                'AMBER: between 10 and 20mph<br>' +
+                'RED: between 5 and 10mph<br>' +
+                'DARK RED: below 5mph <br>' +
+                'GREY: no speed reported<br>' +
+                'Trafic drives on the left. Updates every 60s.' +
+                '</div>';
+        }
         return div;
     };
     return legend;
 
 }
 
+
+L.Control.Toggle = L.Control.extend({
+    onAdd: function() {
+        var container = L.DomUtil.create('div', 'toggle leaflet-bar');
+        create_button('Absolute', 'Absolute', 'absolute', container, display_absolute);
+        create_button('Relative', 'Relative', 'relative', container, display_relative);
+        return container;
+    },
+
+    onRemove: function() {
+        // Nothing to do here
+    }
+});
+
+L.control.toggle = function(opts) {
+    return new L.Control.Toggle(opts);
+};
+
+function create_button(html, title, className, container, fn) {
+    var link = L.DomUtil.create('a', className, container);
+    link.innerHTML = html;
+    link.href = '#';
+    link.title = title;
+
+    /*
+     * Will force screen readers like VoiceOver to read this as "Zoom in - button"
+    */
+    link.setAttribute('role', 'button');
+    link.setAttribute('aria-label', title);
+
+    L.DomEvent.disableClickPropagation(link);
+    L.DomEvent.on(link, 'click', L.DomEvent.stop);
+    L.DomEvent.on(link, 'click', fn, this);
+    //L.DomEvent.on(link, 'click', this._refocusOnMap, this);
+
+    return link;
+}
+
+
+function display_absolute() {
+    line_display = 'absolute';
+    reload_ledgend();
+    load_journey_times();
+}
+
+function display_relative() {
+    line_display = 'relative';
+    reload_ledgend();
+    load_journey_times();
+}
+
+function reload_ledgend() {
+    if (ledgend) {
+        ledgend.remove();
+    }
+    ledgend = get_legend().addTo(map);
+}
 
 // Async load locations, annotate with auto-refreshing journey times
 function load_data() {
@@ -195,26 +273,46 @@ function load_journey_times() {
 
 // Set line's colour based on corresponding journey's travelTime and
 // normalTravelTime
-function update_line_colour(line) {
+function update_line_colour(polyline) {
 
-    if (line !== undefined) {
-        var journey = line.properties.journey;
+    if (polyline !== undefined) {
+        var journey = polyline.properties.journey;
+        var choice;
         // journeyTime missing
         if (!journey.travelTime) {
-            line.setStyle({color: BROKEN_COLOUR});
+            choice = BROKEN_COLOUR;
         }
-        // Worse than normal
-        else if (journey.travelTime > 1.1*journey.normalTravelTime) {
-            line.setStyle({color: SLOW_COLOUR});
+        else if (line_display === 'relative') {
+            // Worse than normal
+            if (journey.travelTime > 1.2*journey.normalTravelTime) {
+                choice = SLOW;
+            }
+            // Better then normal
+            else if (journey.travelTime < 0.8*journey.normalTravelTime) {
+                choice = FAST;
+            }
+            // Normal(ish)
+            else {
+                choice = NORMAL_COLOUR;
+            }
         }
-        // Better then normal
-        else if (journey.travelTime < 0.9*journey.normalTravelTime) {
-            line.setStyle({color: QUICK_COLOUR});
+        else if (line_display === 'absolute') {
+            var line = polyline.properties.line;
+            var speed = (line.length / journey.travelTime) * TO_MPH;
+            if (speed < 5) {
+                choice = VERY_SLOW;
+            }
+            else if (speed < 10) {
+                choice = SLOW;
+            }
+            else if (speed < 20) {
+                choice = MEDIUM;
+            }
+            else {
+                choice = FAST;
+            }
         }
-        // Normal(ish)
-        else {
-            line.setStyle({color: NORMAL_COLOUR});
-        }
+        polyline.setStyle({color: choice});
     }
 
 }
