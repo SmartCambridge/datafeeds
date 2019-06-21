@@ -339,20 +339,20 @@ function line_popup(polyline) {
 }
 
 function get_clock() {
-    var clock = L.control({position: 'bottomleft'});
-    clock.onAdd = function () {
+    var control = L.control({position: 'bottomleft'});
+    control.onAdd = function () {
         var div = L.DomUtil.create('div', 'leaflet-control-layers leaflet-control-layers-expanded clock');
         div.innerHTML = '--:--:--';
         return div;
     };
-    clock.update = function() {
+    control.update = function() {
         var datetime = new Date();
         var hh = ('0'+datetime.getHours()).slice(-2);
         var mm = ('0'+datetime.getMinutes()).slice(-2);
         var ss = ('0'+datetime.getSeconds()).slice(-2);
-        clock.getContainer().innerHTML = hh+':'+mm+':'+ss;
+        control.getContainer().innerHTML = hh+':'+mm+':'+ss;
     };
-    return clock;
+    return control;
 }
 
 // Legend management
@@ -403,7 +403,7 @@ function set_ledgend_key(element) {
     }
     else {
         colours =
-            `<span style="color: ${FAST_COLOUR}">GREEN</span> above 20 mph<br>` +
+            `<span style="color: ${FAST_COLOUR}">GREEN</span>: above 20 mph<br>` +
             `<span style="color: ${MEDIUM_COLOUR}">AMBER</span>: between 10 and 20 mph<br>` +
             `<span style="color: ${SLOW_COLOUR}">RED</span>: between 5 and 10 mph<br>` +
             `<span style="color: ${VERY_SLOW_COLOUR}">DARK RED</span>: below 5 mph <br>` +
