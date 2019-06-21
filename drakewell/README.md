@@ -51,3 +51,11 @@ at-cost add-on that the County didn't purchase)
 4) CCC's IDOX system seems to be getting TrafficFlow data at the individual sensors.
 Can we access that?
 
+## Cambridge JSON feeds
+
+With new credentials, JSON data for cambridge is available
+
+``
+https://drakewell04.drakewell.com/npmatchv2/exports/a/locations.asp?node=CAMBRIDGE_JTMS&key=<key>
+https://drakewell04.drakewell.com/npmatchv2/exports/a/livejourneytimes.asp?node=CAMBRIDGE_JTMS&key=<key>
+```
