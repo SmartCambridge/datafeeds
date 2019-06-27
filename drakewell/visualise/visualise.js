@@ -26,6 +26,8 @@ var MEDIUM_COLOUR = '#eb7F1b';
 var FAST_COLOUR = '#85cd50';
 var BROKEN_COLOUR = '#b0b0b0';
 
+var DEFAULT_SPEED_DISPLAY = 'actual';
+
 // Script state globals
 var map,                            // The Leaflet map object itself
     sites_layer,                    // layer containing the sensor sites
@@ -33,20 +35,24 @@ var map,                            // The Leaflet map object itself
     compound_routes_layer,          // Layer containing the compound routes
     layer_control,                  // The layer control
     clock,                          // The clock control
+    ledgend,
     hilighted_line,                 // The currently highlighted link or route
-    speed_display = 'actual',       // Line colour mode - 'actual', 'normal' or 'relative'
+    speed_display,                  // Line colour mode - 'actual', 'normal' or 'relative'
     line_map = {};                  // Lookup link/route id to displayed polyline
 
 // Initialise
 $(document).ready(function () {
 
-    setup_map();
+    init();
     load_data();
+
+    //  (Re-)set program state based on URL query parameters
+    window.addEventListener('popstate', set_state);
 
 });
 
-// Setup the map environment
-function setup_map() {
+// Synchronous environment setup
+function init() {
 
     // Various feature layers
     sites_layer = L.featureGroup();
@@ -66,7 +72,7 @@ function setup_map() {
     map = L.map('map', {zoomControl: false});
 
     // Map legend
-    get_legend().addTo(map);
+    ledgend = get_legend().addTo(map);
 
     // Layer control
     var base_layers = {
@@ -89,9 +95,11 @@ function setup_map() {
     // Handler to clear any highlighting caused by clicking lines
     map.on('click', clear_line_highlight);
 
-    // Centre on Cambridge and add default layers
-    var cambridge = new L.LatLng(52.20038, 0.1197);
-    map.setView(cambridge, 12).addLayer(mb).addLayer(sites_layer).addLayer(links_layer);
+    //Add default layers
+    map.addLayer(mb).addLayer(sites_layer).addLayer(links_layer);
+
+    // Initialise program state based on URL query parameters
+    set_state();
 
 }
 
@@ -363,9 +371,7 @@ function get_legend() {
         add_button(div, 'actual', 'Actual speed');
         add_button(div, 'normal', 'Normal speed');
         add_button(div, 'relative', 'Speed relative to normal');
-        var key = L.DomUtil.create('div', 'ledgend-key', div);
-        key.id = 'ledgend-key';
-        set_ledgend_key(key);
+        L.DomUtil.create('div', 'ledgend-key', div);
         return div;
     };
     return legend;
@@ -377,9 +383,6 @@ function add_button(parent, value, html) {
     button.type = 'radio';
     button.name = 'display_type';
     button.value = value;
-    if (speed_display === value) {
-        button.checked = 'checked';
-    }
     var span = L.DomUtil.create('span', 'ledgend-button-text', label);
     span.innerHTML = html;
     L.DomEvent.disableClickPropagation(button);
@@ -388,11 +391,19 @@ function add_button(parent, value, html) {
 
 function display_select() {
     speed_display = this.value;
-    set_ledgend_key(document.getElementById('ledgend-key'));
+    set_ledgend();
     update_line_colours();
+    save_state();
 }
 
-function set_ledgend_key(element) {
+function set_ledgend() {
+    var ledgend_container = ledgend.getContainer();
+    ledgend_container.querySelectorAll('input[type=\'radio\']').forEach(function(el){
+        if (el.value === speed_display) {
+            el.checked = true;
+        }
+    });
+    var key = ledgend_container.querySelector('div.ledgend-key');
     var colours;
     if (speed_display === 'relative') {
         colours =
@@ -409,8 +420,34 @@ function set_ledgend_key(element) {
             `<span style="color: ${VERY_SLOW_COLOUR}">DARK RED</span>: below 5 mph <br>` +
             `<span style="color: ${BROKEN_COLOUR}">GREY</span>: no speed reported<br>`;
     }
-    element.innerHTML = '<div class="ledgend-colours">' + colours + '</div>' +
+    key.innerHTML = '<div class="ledgend-colours">' + colours + '</div>' +
         '<div class="ledgend-common">Traffic drives on the left. Updates every 60s.</div>';
+}
+
+// Save current state to the URL
+function save_state() {
+    // Build a dict of non-default values
+    var state = {};
+    if (speed_display !== DEFAULT_SPEED_DISPLAY) {
+        state.s = speed_display;
+    }
+    var params = $.param(state);
+    var uri = location.protocol + '//' + location.host + location.pathname;
+    if (params) {
+        uri += '?' + params;
+    }
+    window.history.pushState(null, '', uri);
+}
+
+
+// Change program state from URL parameters
+function set_state() {
+    var params = new URLSearchParams(window.location.search);
+
+    //speed display mode
+    speed_display = params.has('s') ? params.get('s') : DEFAULT_SPEED_DISPLAY;
+    set_ledgend();
+    update_line_colours();
 }
 
 // Find an object from a list of objects by matching each object's 'id'
