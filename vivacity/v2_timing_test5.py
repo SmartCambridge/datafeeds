@@ -92,7 +92,19 @@ def get_counts(token, countlines=[], classes=[], start=None, end=None):
     return data
 
 
+def get_vehicles(data):
+    #print(data)
+    count = 0
+    for countline in data:
+        counts = data[countline]['counts']
+        for vclass in counts:
+            count += counts[vclass]['countIn'] + counts[vclass]['countOut']
+    return count
+
+
 def run():
+
+    countline = '13080'
 
     # Top of the next minute
     start = ((datetime.datetime.now() + datetime.timedelta(minutes=1))
@@ -106,8 +118,9 @@ def run():
 
     token = get_token()
 
-    first_counts = get_counts(token, countlines=['13074'], start=start, end=end)
-    print('Start:', start.isoformat())
+    first_counts = get_counts(token, countlines=[countline], start=start, end=end)
+    previous = get_vehicles(first_counts)
+    print('Start:', start.isoformat(), 'Vehicles:', previous, 'Countline:', countline)
 
     next = start
     while next < end:
@@ -116,14 +129,18 @@ def run():
         pause = (next-datetime.datetime.now()).total_seconds()
         time.sleep(pause)
 
-        second_counts = get_counts(token, countlines=['13074'], start=start, end=end)
+        second_counts = get_counts(token, countlines=[countline], start=start, end=end)
 
         diff = DeepDiff(first_counts, second_counts)
 
         if diff:
-            print('Change:', datetime.datetime.now().isoformat())
+            vehicles = get_vehicles(second_counts)
+            print('Change:', datetime.datetime.now().isoformat(),
+                  'Vehicles:', vehicles, 'Diff:', vehicles-previous)
+            previous = vehicles
 
         first_counts = second_counts
+
         # Refresh the token in case it times out
         token = get_token()
 

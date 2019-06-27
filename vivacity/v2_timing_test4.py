@@ -106,8 +106,8 @@ def run():
     start = parse(first_counts['13074']['from'])
     end = parse(first_counts['13074']['to'])
 
-    print("Initial from: ", first_counts['13074']['from'], start.isoformat())
-    print("Initial to: ", first_counts['13074']['to'], end.isoformat())
+    print("Initial from: ", first_counts['13074']['from'])
+    print("Initial to: ", first_counts['13074']['to'])
 
     for ctr in range(20):
 
@@ -115,7 +115,13 @@ def run():
 
         second_counts = get_counts(token, countlines=['13074'], start=start, end=end)
 
-        print(ctr, ': ', json.dumps(DeepDiff(first_counts, second_counts), indent=4))
+        diff = DeepDiff(first_counts, second_counts)
+
+        if diff:
+            print(now.isoformat(), "Changed")
+            print(json.dumps(diff, indent=4))
+        else:
+            print(now.isoformat(), "No change")
 
         first_counts = second_counts
 
