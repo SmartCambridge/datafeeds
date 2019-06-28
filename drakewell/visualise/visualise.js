@@ -1,6 +1,6 @@
 // Javascript functions for displaying Bluetruth data
 
-/* eslint no-console: "off" */
+/* eslint no-console: "warn" */
 /*global $, L, LOCATIONS_URL, JOURNEYS_URL, MB_ACCESS_TOKEN, TF_API_KEY */
 
 // m/sec to mph
@@ -36,7 +36,7 @@ var map,                            // The Leaflet map object itself
     layer_control,                  // The layer control
     clock,                          // The clock control
     legend,                         // The legend
-    hilighted_line,                 // The currently highlighted link or route
+    highlighted_line_id = null,      // Id of the currently highlighted link or route
     speed_display,                  // Line colour mode - 'actual', 'normal' or 'relative'
     line_map = {};                  // Lookup link/route id to displayed polyline
 
@@ -104,6 +104,12 @@ function init() {
 }
 
 
+// Clear any highlighted line
+function clear_line_highlight() {
+    highlight_line(null);
+}
+
+
 // Async load locations, annotate with auto-refreshing journey times
 function load_data() {
 
@@ -161,9 +167,16 @@ function add_lines(lines, sites, layer) {
         var polyline = L.polyline(points, NORMAL_LINE)
             .setStyle({color: NORMAL_COLOUR})
             .bindPopup(line_popup, {maxWidth: 500})
-            .on('click', line_highlight)
+            .on('click', highlight_line_handler)
             .addTo(layer);
         polyline.properties = { 'line': line };
+
+        // Update styling if this line is highlighted, which may
+        // have already happened based on URL parameters
+        if (line.id === highlighted_line_id) {
+            polyline.setStyle(HIGHLIGHT_LINE)
+                .setOffset(HIGHLIGHT_LINE.offset);
+        }
 
         // Remember the polyline for the future
         line_map[line.id] = polyline;
@@ -177,11 +190,17 @@ function add_lines(lines, sites, layer) {
 
 }
 
+// Handle line click
+function highlight_line_handler(e) {
+
+    var polyline = e.target;
+    highlight_line(polyline.properties.line.id);
+
+}
+
 
 // Load journey times, annotate links and compound routes, and schedule to re-run
 function load_journey_times() {
-
-    console.log('(Re-)loading journey times');
 
     $.get(JOURNEYS_URL)
         .done(function(journeys){
@@ -277,27 +296,28 @@ function update_actual_normal_speed(polyline) {
 }
 
 
-// Hilight a clicked line
-function line_highlight(e) {
+// Highlight the line identified by id. Save the resulting state if
+// do_save isn't explicitly false
+function highlight_line(id, do_save) {
 
-    var line = e.target;
-
-    clear_line_highlight();
-    line.setStyle(HIGHLIGHT_LINE)
-        .setOffset(HIGHLIGHT_LINE.offset);
-    hilighted_line = line;
-}
-
-
-// Clear any line highlight
-function clear_line_highlight() {
-
-    if (hilighted_line) {
-        hilighted_line.setStyle(NORMAL_LINE)
-            .setOffset(NORMAL_LINE.offset);
-        hilighted_line  = null;
+    // If anything actually needs to be done
+    if (id !== highlighted_line_id) {
+        // Clear existing
+        if (highlighted_line_id) {
+            var polyline = line_map[highlighted_line_id];
+            polyline.setStyle(NORMAL_LINE)
+                .setOffset(NORMAL_LINE.offset);
+        }
+        // Set new (if it exists)
+        if (id && line_map.hasOwnProperty(id)) {
+            line_map[id].setStyle(HIGHLIGHT_LINE)
+                .setOffset(HIGHLIGHT_LINE.offset);
+        }
+        highlighted_line_id = id;
+        if (do_save !== false) {
+            save_state();
+        }
     }
-
 }
 
 
@@ -365,8 +385,8 @@ function get_clock() {
 
 // Legend management
 function get_legend() {
-    var legend = L.control({position: 'topleft'});
-    legend.onAdd = function () {
+    var l = L.control({position: 'topleft'});
+    l.onAdd = function () {
         var div = L.DomUtil.create('div', 'leaflet-control-layers leaflet-control-layers-expanded legend');
         add_button(div, 'actual', 'Actual speed');
         add_button(div, 'normal', 'Normal speed');
@@ -374,7 +394,7 @@ function get_legend() {
         L.DomUtil.create('div', 'legend-key', div);
         return div;
     };
-    return legend;
+    return l;
 }
 
 function add_button(parent, value, html) {
@@ -427,14 +447,17 @@ function set_legend() {
 // Save current state to the URL
 function save_state() {
     // Build a dict of non-default values
-    var state = {};
+    var params = new URLSearchParams();
     if (speed_display !== DEFAULT_SPEED_DISPLAY) {
-        state.s = speed_display;
+        params.set('s', speed_display);
     }
-    var params = $.param(state);
+    if (highlighted_line_id) {
+        params.set('h', highlighted_line_id);
+    }
+    var params_string = params.toString();
     var uri = location.protocol + '//' + location.host + location.pathname;
-    if (params) {
-        uri += '?' + params;
+    if (params_string) {
+        uri += '?' + params_string;
     }
     window.history.pushState(null, '', uri);
 }
@@ -448,6 +471,10 @@ function set_state() {
     speed_display = params.has('s') ? params.get('s') : DEFAULT_SPEED_DISPLAY;
     set_legend();
     update_line_colours();
+
+    // line highlight
+    var id = params.has('h') ? params.get('h') : null;
+    highlight_line(id, false);
 }
 
 // Find an object from a list of objects by matching each object's 'id'
@@ -460,6 +487,5 @@ function find_object(list, id) {
             return object;
         }
     }
-    console.log('Failed to find object with id ', id);
     return undefined;
 }
