@@ -35,7 +35,7 @@ var map,                            // The Leaflet map object itself
     compound_routes_layer,          // Layer containing the compound routes
     layer_control,                  // The layer control
     clock,                          // The clock control
-    ledgend,
+    legend,                         // The legend
     hilighted_line,                 // The currently highlighted link or route
     speed_display,                  // Line colour mode - 'actual', 'normal' or 'relative'
     line_map = {};                  // Lookup link/route id to displayed polyline
@@ -72,7 +72,7 @@ function init() {
     map = L.map('map', {zoomControl: false});
 
     // Map legend
-    ledgend = get_legend().addTo(map);
+    legend = get_legend().addTo(map);
 
     // Layer control
     var base_layers = {
@@ -367,23 +367,23 @@ function get_clock() {
 function get_legend() {
     var legend = L.control({position: 'topleft'});
     legend.onAdd = function () {
-        var div = L.DomUtil.create('div', 'leaflet-control-layers leaflet-control-layers-expanded ledgend');
+        var div = L.DomUtil.create('div', 'leaflet-control-layers leaflet-control-layers-expanded legend');
         add_button(div, 'actual', 'Actual speed');
         add_button(div, 'normal', 'Normal speed');
         add_button(div, 'relative', 'Speed relative to normal');
-        L.DomUtil.create('div', 'ledgend-key', div);
+        L.DomUtil.create('div', 'legend-key', div);
         return div;
     };
     return legend;
 }
 
 function add_button(parent, value, html) {
-    var label = L.DomUtil.create('label', 'ledgend-label', parent);
-    var button = L.DomUtil.create('input', 'ledgend-button', label);
+    var label = L.DomUtil.create('label', 'legend-label', parent);
+    var button = L.DomUtil.create('input', 'legend-button', label);
     button.type = 'radio';
     button.name = 'display_type';
     button.value = value;
-    var span = L.DomUtil.create('span', 'ledgend-button-text', label);
+    var span = L.DomUtil.create('span', 'legend-button-text', label);
     span.innerHTML = html;
     L.DomEvent.disableClickPropagation(button);
     L.DomEvent.on(button, 'click', display_select,  button);
@@ -391,19 +391,19 @@ function add_button(parent, value, html) {
 
 function display_select() {
     speed_display = this.value;
-    set_ledgend();
+    set_legend();
     update_line_colours();
     save_state();
 }
 
-function set_ledgend() {
-    var ledgend_container = ledgend.getContainer();
-    ledgend_container.querySelectorAll('input[type=\'radio\']').forEach(function(el){
+function set_legend() {
+    var legend_container = legend.getContainer();
+    legend_container.querySelectorAll('input[type=\'radio\']').forEach(function(el){
         if (el.value === speed_display) {
             el.checked = true;
         }
     });
-    var key = ledgend_container.querySelector('div.ledgend-key');
+    var key = legend_container.querySelector('div.legend-key');
     var colours;
     if (speed_display === 'relative') {
         colours =
@@ -420,8 +420,8 @@ function set_ledgend() {
             `<span style="color: ${VERY_SLOW_COLOUR}">DARK RED</span>: below 5 mph <br>` +
             `<span style="color: ${BROKEN_COLOUR}">GREY</span>: no speed reported<br>`;
     }
-    key.innerHTML = '<div class="ledgend-colours">' + colours + '</div>' +
-        '<div class="ledgend-common">Traffic drives on the left. Updates every 60s.</div>';
+    key.innerHTML = '<div class="legend-colours">' + colours + '</div>' +
+        '<div class="legend-common">Traffic drives on the left. Updates every 60s.</div>';
 }
 
 // Save current state to the URL
@@ -446,7 +446,7 @@ function set_state() {
 
     //speed display mode
     speed_display = params.has('s') ? params.get('s') : DEFAULT_SPEED_DISPLAY;
-    set_ledgend();
+    set_legend();
     update_line_colours();
 }
 
