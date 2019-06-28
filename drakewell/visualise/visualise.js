@@ -1,6 +1,6 @@
 // Javascript functions for displaying Bluetruth data
 
-/* eslint no-console: "warn" */
+/* eslint no-console: "warn", max-lines-per-function: "off" */
 /*global $, L, LOCATIONS_URL, JOURNEYS_URL, MB_ACCESS_TOKEN, TF_API_KEY */
 
 // m/sec to mph
@@ -27,6 +27,7 @@ var FAST_COLOUR = '#85cd50';
 var BROKEN_COLOUR = '#b0b0b0';
 
 var DEFAULT_SPEED_DISPLAY = 'actual';
+var DEFAULT_BASELAYER = 'MapBox';
 
 // Script state globals
 var map,                            // The Leaflet map object itself
@@ -34,10 +35,15 @@ var map,                            // The Leaflet map object itself
     links_layer,                    // Layer containing the point to point links
     compound_routes_layer,          // Layer containing the compound routes
     layer_control,                  // The layer control
+    zoom_control,                   // The zoom control
     clock,                          // The clock control
     legend,                         // The legend
-    highlighted_line_id = null,      // Id of the currently highlighted link or route
+    highlighted_line_id = null,     // Id of the currently highlighted link or route
     speed_display,                  // Line colour mode - 'actual', 'normal' or 'relative'
+    map_moved = false,              // Has the map been moved from its default
+    base_layers,                    // Mapping of names to available base layers
+    overlay_layers,                 // Mapping of names to available overlay layers
+    interactive = true,             // Include interactive controls?
     line_map = {};                  // Lookup link/route id to displayed polyline
 
 // Initialise
@@ -75,38 +81,49 @@ function init() {
     legend = get_legend().addTo(map);
 
     // Layer control
-    var base_layers = {
-        'MapBox': mb,
-        'ThunderForest': tf,
-        'OSM': osm,
-    };
-    var overlay_layers = {
-        'Sites': sites_layer,
-        'All links': links_layer,
-    };
+    base_layers = {'MapBox': mb, 'ThunderForest': tf, 'OSM': osm };
+    overlay_layers = {'Sites': sites_layer, 'All links': links_layer};
     layer_control = L.control.layers(base_layers, overlay_layers, {collapsed: true}).addTo(map);
 
     //  Zoom control (with non-default position)
-    L.control.zoom({position: 'topright'}).addTo(map);
+    zoom_control = L.control.zoom({position: 'topright'}).addTo(map);
 
     // Clock
     clock = get_clock().addTo(map);
 
-    // Handler to clear any highlighting caused by clicking lines
-    map.on('click', clear_line_highlight);
-
-    //Add default layers
-    map.addLayer(mb).addLayer(sites_layer).addLayer(links_layer);
-
     // Initialise program state based on URL query parameters
     set_state();
 
+    map.addLayer(sites_layer).addLayer(links_layer);
+
+    // Handler to clear any highlighting caused by clicking lines
+    map.on('click', clear_line_highlight);
+
+    // Handler to track movement
+    map.on('moveend', move_handler);
+
+    // Handlers to manage changes to layers
+    map.on('baselayerchange', baselayerchange_handler);
+    //map.on('overlayadd', overlayadd_handler);
+    //map.on('overlayremove', overlayremove_handler);
+
+}
+
+function baselayerchange_handler() {
+    save_state();
 }
 
 
 // Clear any highlighted line
 function clear_line_highlight() {
     highlight_line(null);
+}
+
+
+// Record map movement
+function move_handler() {
+    map_moved = true;
+    save_state();
 }
 
 
@@ -123,9 +140,16 @@ function load_data() {
             add_lines(locations.links, locations.sites, links_layer);
             add_lines(locations.compoundRoutes, locations.sites, compound_routes_layer);
 
-            // Scale map to fit
-            var region = sites_layer.getBounds().extend(links_layer);
-            map.fitBounds(region);
+            // Scale map to fit without saving the result assuming it
+            // hasn't already been moved
+            if (!map_moved) {
+                map.off('moveend', move_handler);
+                map.off('baselayerchange', baselayerchange_handler);
+                var region = sites_layer.getBounds().extend(links_layer);
+                map.fitBounds(region);
+                map.on('baselayerchange', baselayerchange_handler);
+                map.on('moveend', move_handler);
+            }
 
             // Load (and schedule for reload) journey times
             load_journey_times();
@@ -446,14 +470,46 @@ function set_legend() {
 
 // Save current state to the URL
 function save_state() {
+
+    console.log('Saving...');
+
     // Build a dict of non-default values
     var params = new URLSearchParams();
+
+    // Speed display mode
     if (speed_display !== DEFAULT_SPEED_DISPLAY) {
         params.set('s', speed_display);
     }
+
+    // Highlighted line
     if (highlighted_line_id) {
         params.set('h', highlighted_line_id);
     }
+
+    // Position and zoom
+    if (map_moved) {
+        params.set('z', map.getZoom());
+        var center = map.getCenter();
+        params.set('la', center.lat.toFixed(5));
+        params.set('ln', center.lng.toFixed(5));
+    }
+
+    // Baselayer
+    var current_base;
+    for (var layer_name in base_layers) {
+        if (base_layers.hasOwnProperty(layer_name) && map.hasLayer(base_layers[layer_name])) {
+            current_base = layer_name;
+        }
+    }
+    if (current_base !== DEFAULT_BASELAYER) {
+        params.set('b', current_base);
+    }
+
+    // Interaction
+    if (!interactive) {
+        params.set('i', 'no');
+    }
+
     var params_string = params.toString();
     var uri = location.protocol + '//' + location.host + location.pathname;
     if (params_string) {
@@ -465,6 +521,9 @@ function save_state() {
 
 // Change program state from URL parameters
 function set_state() {
+
+    console.log('Setting...');
+
     var params = new URLSearchParams(window.location.search);
 
     //speed display mode
@@ -475,6 +534,61 @@ function set_state() {
     // line highlight
     var id = params.has('h') ? params.get('h') : null;
     highlight_line(id, false);
+
+    // Position - 'z', 'la' and 'ln' always set together
+    if (params.has('z')) {
+        map.setView([params.get('la'), params.get('ln')], params.get('z'));
+        map_moved = true;
+    }
+
+    // Baselayer
+    var base_name = params.has('b') ? params.get('b') : DEFAULT_BASELAYER;
+    map.off('baselayerchange', baselayerchange_handler);
+    for (var layer_name in base_layers) {
+        if (base_layers.hasOwnProperty(layer_name)) {
+            if (layer_name === base_name) {
+                base_layers[layer_name].addTo(map);
+            }
+            else {
+                base_layers[layer_name].removeFrom(map);
+            }
+        }
+    }
+    map.on('baselayerchange', baselayerchange_handler);
+
+    // Interactive controls
+    hide_interaction(params.has('i') && params.get('i') === 'no');
+
+}
+
+
+function hide_interaction(hide) {
+
+    var legend_container = legend.getContainer();
+    if (hide) {
+        interactive = false;
+        zoom_control.remove();
+        layer_control.remove();
+        legend_container.querySelectorAll('label').forEach(function(label){
+            var button = label.querySelector('input[type=\'radio\']');
+            var text = label.querySelector('span');
+            button.hidden = true;
+            if (button.value !== speed_display) {
+                text.hidden = true;
+            }
+        });
+    }
+    else {
+        interactive = true;
+        layer_control.addTo(map);
+        zoom_control.addTo(map);
+        legend_container.querySelectorAll('label').forEach(function(label){
+            var button = label.querySelector('input[type=\'radio\']');
+            label.hidden = false;
+            button.hidden = false;
+        });
+    }
+
 }
 
 // Find an object from a list of objects by matching each object's 'id'
