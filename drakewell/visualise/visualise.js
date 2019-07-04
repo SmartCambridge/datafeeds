@@ -55,10 +55,6 @@ function setup_map() {
 
     // Various map providers
     var osm = L.tileLayer.provider('OpenStreetMap.Mapnik');
-    var mb = L.tileLayer.provider('MapBox', {
-        id: 'mapbox.streets',
-        accessToken: MB_ACCESS_TOKEN
-    });
     var tf = L.tileLayer.provider('Thunderforest.Neighbourhood', {
         apikey: TF_API_KEY
     });
@@ -70,9 +66,8 @@ function setup_map() {
 
     // Layer control
     var base_layers = {
-        'MapBox': mb,
-        'ThunderForest': tf,
         'OSM': osm,
+        'ThunderForest': tf,
     };
     var overlay_layers = {
         'Sites': sites_layer,
@@ -91,7 +86,7 @@ function setup_map() {
 
     // Centre on Cambridge and add default layers
     var cambridge = new L.LatLng(52.20038, 0.1197);
-    map.setView(cambridge, 12).addLayer(mb).addLayer(sites_layer).addLayer(links_layer);
+    map.setView(cambridge, 12).addLayer(osm).addLayer(sites_layer).addLayer(links_layer);
 
 }
 
