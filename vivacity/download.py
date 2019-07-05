@@ -80,7 +80,10 @@ def get_data(token, start, duration):
         headers=headers
     )
     r.raise_for_status()
-    return r.json()
+    if r.status_code == 204:
+        return {}
+    else:
+        return r.json()
 
 
 def store_data(results, directory):
