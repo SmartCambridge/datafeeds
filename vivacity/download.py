@@ -11,7 +11,7 @@ import json
 import os
 import sys
 
-from datetime import datetime, date, time, timedelta, timezone
+from datetime import datetime, time, timedelta, timezone
 
 import dateutil.parser
 
@@ -264,7 +264,8 @@ def parse_args():
 
     parser.add_argument('start', help='first (or only) day to download')
     parser.add_argument('--end', '-e', help='last day to download')
-    parser.add_argument('--dest', '-d', default='vivacity_data', help='directory in which to store data')
+    parser.add_argument('--dest', '-d', default='vivacity_data',
+                        help='directory in which to store data')
 
     args = parser.parse_args()
 
@@ -275,10 +276,11 @@ def parse_args():
         else:
             args.end = args.start
     except ValueError as e:
-        print(e.args, file=sys.stderr)
+        print(''.join(e.args), file=sys.stderr)
         sys.exit(1)
 
     return args
+
 
 def run():
 
