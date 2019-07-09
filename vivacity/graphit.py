@@ -9,6 +9,7 @@ import pandas as pd
 
 from matplotlib import pyplot
 from matplotlib.backends.backend_pdf import PdfPages
+import matplotlib
 
 ONE_DAY = timedelta(days=1)
 MM_TO_INCH = 0.0393701
@@ -16,9 +17,12 @@ A4P = (210*MM_TO_INCH, 297*MM_TO_INCH)
 A3P = (297*MM_TO_INCH, 420*MM_TO_INCH)
 A3L = (420*MM_TO_INCH, 297*MM_TO_INCH)
 
-ROWS = 6
-START = date(2019, 6, 24)
-END = date(2019, 7, 5)
+ROWS_PER_PAGE = 6
+START = date(2019, 5, 10)
+END = date(2019, 7, 8)
+YMAX = 13000
+FIGSIZE = A3L
+
 COUNTLINES = {
     '13069': {'name': 'Tennison Road', 'in': 'north-bound', 'out': 'south-bound'},
     '13070': {'name': 'Coleridge Road', 'in': 'south-bound', 'out': 'north-bound'},
@@ -102,41 +106,56 @@ def get_data(countline, direction, start, end):
     return data
 
 
-def do_graph(axs, row, countline, direction, start, end):
+def do_graph(df, ax, col):
 
-    title = COUNTLINES[countline]['name'] + ' ' + COUNTLINES[countline][direction]
+    # df.plot.bar(y=[col], ax=ax, ylim=(0, YMAX), legend=False)
 
-    data = get_data(countline, direction, start, end)
-    df = pd.DataFrame(data)
+    ax.bar(df.index, df[col], zorder =3)
+
+    ax.grid(axis='y', zorder=2)
+    ax.xaxis.set_major_locator(matplotlib.dates.WeekdayLocator(byweekday=matplotlib.dates.MO))
+    ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%d\n%b'))
+    ax.xaxis.set_minor_locator(matplotlib.dates.DayLocator())
+
+    left, right = ax.get_xlim()
+    ax.axvspan(date(2019, 7, 1), matplotlib.dates.num2date(right), facecolor='k', alpha=0.1, zorder=1)
+    # Reset xlim becasue otherwise the axvspan makes them bigger each time around!
+    ax.set_xlim(left, right)
+
+
+def do_graphs(axs, row, countline, direction, start, end):
+
+    df = pd.DataFrame(get_data(countline, direction, start, end))
     df.columns = ('Date', 'Pedestrian', 'Cyclist', 'Motor')
     df.index = pd.to_datetime(df['Date'])
 
-    ymax = 1000
+    df = df.resample('D').sum()
 
-    df.resample('H').sum().plot(y=['Pedestrian'], ax=axs[row, 0], ylim=(0, ymax), legend=False)
-    df.resample('H').sum().plot(y=['Cyclist'], ax=axs[row, 1], ylim=(0, ymax), legend=False)
-    df.resample('H').sum().plot(y=['Motor'], ax=axs[row, 2], ylim=(0, ymax), legend=False)
+    do_graph(df, axs[row, 0], col='Pedestrian')
+    do_graph(df, axs[row, 1], col='Cyclist')
+    do_graph(df, axs[row, 2], col='Motor')
 
-    for ctr in range(3):
-        axs[row, ctr].grid(axis='y')
+    title = (f"{COUNTLINES[countline]['name']} "
+             f"{COUNTLINES[countline][direction]} "
+             f"[{countline} {direction}]")
+    axs[row, 0].annotate(title, xy=(0.01, 0.85), xycoords="axes fraction")
+    axs[row, 0].set(xlabel='', ylabel='Per day')
 
-    title = COUNTLINES[countline]['name'] + ' ' + COUNTLINES[countline][direction]
-    axs[row, 0].annotate(title, xy=(0.01, 0.9), xycoords="axes fraction")
+    if row % ROWS_PER_PAGE == 0:
+        axs[row, 0].set_title('Pedestrian')
+        axs[row, 1].set_title('Cyclist')
+        axs[row, 2].set_title('Motor vehicle')
 
 
 def setup_figure():
 
-    fig, axs = pyplot.subplots(nrows=ROWS, ncols=3, sharex=True, sharey=True)
+    fig, axs = pyplot.subplots(nrows=ROWS_PER_PAGE,
+                               ncols=3,
+                               sharex=True,
+                               sharey=True,
+                               figsize=FIGSIZE)
 
-    pyplot.figtext(0.2, 0.9, 'Cyclist', figure=fig, size='large', ha='center')
-    pyplot.figtext(0.5, 0.9, 'Pedestrian', figure=fig, size='large', ha='center')
-    pyplot.figtext(0.8, 0.9, 'Motor', figure=fig, size='large', ha='center')
-
-    for ax1 in axs:
-        for ax2 in ax1:
-            ax2.grid(axis='y')
-            ax2.set_xlabel('')
-            ax2.set_ylabel('Per hour')
+    #fig.tight_layout()
 
     return fig, axs
 
@@ -150,19 +169,28 @@ def run():
             Plot graph
     '''
 
-    pyplot.rc('figure', figsize=A3L)
+    # 'seaborn-dark', 'seaborn-darkgrid', 'seaborn-ticks',
+    # fivethirtyeight', 'seaborn-whitegrid', 'classic',
+    # '_classic_test', 'fast', 'seaborn-talk', 'seaborn-dark-palette',
+    # 'seaborn-bright', 'seaborn-pastel', 'grayscale',
+    # 'seaborn-notebook', 'ggplot', 'seaborn-colorblind',
+    # 'seaborn-muted', 'seaborn', 'Solarize_Light2', 'seaborn-paper'#,
+    # 'bmh', 'tableau-colorblind10', 'seaborn-white', 'dark_background',
+    # 'seaborn-poster', 'seaborn-deep']
 
-    fig, axs = setup_figure()
+    # pyplot.style.use('seaborn')
 
     row = 0
+    fig = None
     with PdfPages('plot.pdf') as pdf:
         for countline in sorted(COUNTLINES.keys(), key=lambda k: COUNTLINES[k]['name']):
             for direction in ['in', 'out']:
-                do_graph(axs, row % ROWS, countline, direction, START, END)
-                row += 1
-                if row % ROWS == 0:
-                    pdf.savefig(fig)
+                if row % ROWS_PER_PAGE == 0:
+                    if row > 0:
+                        pdf.savefig(fig)
                     fig, axs = setup_figure()
+                do_graphs(axs, row % ROWS_PER_PAGE, countline, direction, START, END)
+                row += 1
 
         pdf.savefig(fig)
 
