@@ -20,21 +20,21 @@ ROWS = 6
 START = date(2019, 6, 24)
 END = date(2019, 7, 5)
 COUNTLINES = {
-    '13069': {'name': 'Tennison Road', 'in': 'north', 'out': 'south'},
-    '13070': {'name': 'Coleridge Road', 'in': 'south', 'out': 'north'},
-    '13071': {'name': 'Mill Road (Prene Road end)', 'in': '', 'out': ''},
-    '13072': {'name': 'Vinery Road', 'in': 'south', 'out': 'north'},
-    '13073': {'name': 'Cherry Hinton Road', 'in': 'east', 'out': 'west'},
-    '13074': {'name': 'Station Road', 'in': 'west', 'out': 'east'},
-    '13075': {'name': 'East Road', 'in': 'north-east', 'out': 'south-west'},
-    '13076': {'name': 'Coldhams Lane', 'in': 'south', 'out': 'north'},
-    '13077': {'name': 'Mill Road (city end)', 'in': 'south-east', 'out': 'north-west'},
-    '13078': {'name': 'Carter Bridge', 'in': 'west', 'out': 'east'},
-    '13079': {'name': 'Milton Road', 'in': 'north-east', 'out': 'south-west'},
-    '13080': {'name': 'Hills Road', 'in': 'south', 'out': 'north'},
-    '13081': {'name': 'Newmarket Road', 'in': 'east', 'out': 'west'},
-    '13082': {'name': 'Histon Road', 'in': 'south', 'out': 'north'},
-    '13086': {'name': 'Perne Road', 'in': 'north', 'out': 'south'},
+    '13069': {'name': 'Tennison Road', 'in': 'north-bound', 'out': 'south-bound'},
+    '13070': {'name': 'Coleridge Road', 'in': 'south-bound', 'out': 'north-bound'},
+    '13071': {'name': 'Mill Road (Prene Road end)', 'in': 'west-bound', 'out': 'east-bound'},
+    '13072': {'name': 'Vinery Road', 'in': 'south-bound', 'out': 'north-bound'},
+    '13073': {'name': 'Cherry Hinton Road', 'in': 'east-bound', 'out': 'west-bound'},
+    '13074': {'name': 'Station Road', 'in': 'west-bound', 'out': 'east-bound'},
+    '13075': {'name': 'East Road', 'in': 'north-east-bound', 'out': 'south-west-bound'},
+    '13076': {'name': 'Coldhams Lane', 'in': 'south-bound', 'out': 'north-bound'},
+    '13077': {'name': 'Mill Road (city end)', 'in': 'south-east-bound', 'out': 'north-west-bound'},
+    '13078': {'name': 'Carter Bridge', 'in': 'west-bound', 'out': 'east-bound'},
+    '13079': {'name': 'Milton Road', 'in': 'north-east-bound', 'out': 'south-west-bound'},
+    '13080': {'name': 'Hills Road', 'in': 'south-bound', 'out': 'north-bound'},
+    '13081': {'name': 'Newmarket Road', 'in': 'west-bound', 'out': 'east-bound'},
+    '13082': {'name': 'Histon Road', 'in': 'south-bound', 'out': 'north-bound'},
+    '13086': {'name': 'Perne Road', 'in': 'north-bound', 'out': 'south-bound'},
     }
 
 
