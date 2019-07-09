@@ -32,6 +32,8 @@ VCLASSES = (
 username = os.getenv('USERNAME')
 password = os.getenv('PASSWORD')
 
+token = None
+
 
 def vivacity_time(t):
     '''
@@ -46,6 +48,8 @@ def vivacity_time(t):
 
 def get_token():
 
+    print('Getting a new token', file=sys.stderr)
+
     assert username is not None and password is not None, (
         'USERNAME and/or PASSWORD environment variable missing')
 
@@ -55,18 +59,23 @@ def get_token():
         headers={'api-version': '2'}
     )
     r.raise_for_status()
-    all_data = r.json()
-    return all_data['access_token']
+    global token
+    token = r.json()
+    token['ts'] = datetime.utcnow()
 
 
-def get_data(token, start, duration):
+def get_data(start, duration):
     '''
     Get raw data for time range `start` to `start+duration`
     '''
 
+    # Get or renew the token as needed
+    if not token or (datetime.utcnow()-token['ts']).total_seconds() > 0.9*token['expires_in']:
+        get_token()
+
     headers = {
         'api-version': '2',
-        'Authorization': 'Bearer ' + token
+        'Authorization': 'Bearer ' + token['access_token']
     }
 
     params = {
@@ -232,7 +241,7 @@ def accumulate_data(results, response, start, duration):
             this_time += FIVE_MINUTES
 
 
-def get_day(token, date, path):
+def get_day(date, path):
     '''
     Get data for one day in one hour chunks and store it
     '''
@@ -243,21 +252,21 @@ def get_day(token, date, path):
     results = {}
 
     for counter in range(24):
-        response = get_data(token, time, ONE_HOUR)
+        response = get_data(time, ONE_HOUR)
         accumulate_data(results, response, time, ONE_HOUR)
         time = time + ONE_HOUR
 
     store_data(results, path)
 
 
-def get_days(token, start, end, path):
+def get_days(start, end, path):
     '''
     Get data for each day from `start` to `end` inclusive and store
     it in the directory `path`
     '''
     day = start
     while day <= end:
-        get_day(token, day, path)
+        get_day(day, path)
         day += ONE_DAY
 
 
@@ -289,9 +298,7 @@ def run():
 
     params = parse_args()
 
-    token = get_token()
-
-    get_days(token, params.start, params.end, params.dest)
+    get_days(params.start, params.end, params.dest)
 
 
 if __name__ == '__main__':
