@@ -49,6 +49,8 @@ http https://api.vivacitylabs.com/sensor "Authorization: Bearer $TOKEN" api-vers
 http https://api.vivacitylabs.com/countline "Authorization: Bearer $TOKEN" api-version:2.0.0 > all_countlines.json
 http https://api.vivacitylabs.com/counts "Authorization: Bearer $TOKEN" api-version:2 > latest_counts.json
 
+[or ./get_latest_data.sh]
+
 
 jq '. | length' all_sensors.json
 jq '. | length' all_countlines.json
