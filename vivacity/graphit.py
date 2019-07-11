@@ -42,6 +42,12 @@ COUNTLINES = {
     }
 
 
+VCLASSES = ("pedestrian", "cyclist", "motorbike", "car",
+            "taxi", "van", "minibus", "bus", "rigid",
+            "truck", "emergency car", "emergency van",
+            "fire engine")
+
+
 def get_data(countline, direction, start, end):
 
     '''
@@ -71,6 +77,7 @@ def get_data(countline, direction, start, end):
     ...
     '''
 
+
     day = start
     data = []
     while day <= end:
@@ -85,20 +92,9 @@ def get_data(countline, direction, start, end):
                 direction + '.txt')
             with open(filename) as file:
                 for line in file:
-                    motors = 0
                     data_block = json.loads(line)
-                    for type, count in data_block['counts'].items():
-                        if type == 'pedestrian':
-                            pedestrians = count
-                        elif type == 'cyclist':
-                            cyclists = count
-                        else:
-                            motors += count
-                    data.append((
-                        data_block['timestamp'],
-                        pedestrians,
-                        cyclists,
-                        motors))
+                    row = [data_block['timestamp']] + [data_block['counts'][key] for key in VCLASSES]
+                    data.append(row)
         except FileNotFoundError:
             pass
         day += ONE_DAY
@@ -110,7 +106,7 @@ def do_graph(df, ax, col):
 
     # df.plot.bar(y=[col], ax=ax, ylim=(0, YMAX), legend=False)
 
-    ax.bar(df.index, df[col], zorder =3, align='edge')
+    ax.bar(df.index, df[col], zorder=3, align='edge')
 
     ax.set_ylim([0, YMAX])
     ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(base=2500))
@@ -145,14 +141,19 @@ def do_graph(df, ax, col):
 def do_graphs(axs_row, countline, direction, start, end):
 
     df = pd.DataFrame(get_data(countline, direction, start, end))
-    df.columns = ('Date', 'Pedestrian', 'Cyclist', 'Motor')
+    df.columns = ('Date',) + VCLASSES
     df.index = pd.to_datetime(df['Date'])
+
+    col_list = list(df)
+    col_list.remove('pedestrian')
+    col_list.remove('cyclist')
+    df['motor'] = df[col_list].sum(axis=1)
 
     df = df.resample('D').sum()
 
-    do_graph(df, axs_row[0], col='Pedestrian')
-    do_graph(df, axs_row[1], col='Cyclist')
-    do_graph(df, axs_row[2], col='Motor')
+    do_graph(df, axs_row[0], col='pedestrian')
+    do_graph(df, axs_row[1], col='cyclist')
+    do_graph(df, axs_row[2], col='motor')
 
     title = (f"{COUNTLINES[countline]['name']}\n"
              f"{COUNTLINES[countline][direction]}\n"
