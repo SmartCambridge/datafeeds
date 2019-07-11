@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;
+                                             charset=utf-8">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css"
+  integrity="sha512-M2wvCLH6DSRazYeZRIm1JnYyh22purTM+FDB5CsyxtQJYeKq83arPe5wgbNmcFXGqiSH2XR8dT/fJISVA1r/zQ=="
+  crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"
+  integrity="sha512-lInM/apFSqyy1o6s89K4iQUKg6ppXEgsVxT35HbzUupEVRh2Eu9Wdl4tHj7dZO0s1uvplcYGmt3498TtHq+log=="
+  crossorigin=""></script>
+
+      <!-- Using a modified local copy that includes Thunderforest Neighbourhood -->
+    <!--
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-providers/1.7.0/leaflet-providers.min.js"
+        integrity="sha256-m+8KWGb6+QMNJLQxmAd70/JJ63YT404bAV+veSxYj1s=" crossorigin="anonymous"></script>
+    -->
+    <script type="text/javascript" src="leaflet-providers.js"></script>
+
+    <script type="text/javascript" src="setup_env.js"></script>
+
+    <!-- Evil hack - loads extracted stop information into 'regions' -->
+    <script type="text/javascript" src="all_sensors.js"></script>
+
+    <!-- Evil hack - loads extracted county boundaries into 'boundaries' -->
+    <script type="text/javascript" src="all_countlines.js"></script>
+
+    <script type="text/javascript">
+
+function init(){
+
+  COUNTLINES = {
+    '13069': {'name': 'Tennison Road', 'in': 'N-bound', 'out': 'S-bound'},
+    '13070': {'name': 'Coleridge Road', 'in': 'S-bound', 'out': 'N-bound'},
+    '13071': {'name': 'Mill Road (E end)', 'in': 'E-bound', 'out': 'W-bound'},
+    '13072': {'name': 'Vinery Road', 'in': 'S-bound', 'out': 'N-bound'},
+    '13073': {'name': 'Cherry Hinton Road', 'in': 'E-bound', 'out': 'W-bound'},
+    '13074': {'name': 'Station Road', 'in': 'W-bound', 'out': 'W-bound'},
+    '13075': {'name': 'East Road', 'in': 'NE-bound', 'out': 'SW-bound'},
+    '13076': {'name': 'Coldhams Lane', 'in': 'S-bound', 'out': 'N-bound'},
+    '13077': {'name': 'Mill Road (NW end)', 'in': 'SE-bound', 'out': 'NW-bound'},
+    '13078': {'name': 'Carter Bridge', 'in': 'W-bound', 'out': 'E-bound'},
+    '13079': {'name': 'Milton Road', 'in': 'NE-bound', 'out': 'SW-bound'},
+    '13080': {'name': 'Hills Road', 'in': 'S-bound', 'out': 'N-bound'},
+    '13081': {'name': 'Newmarket Road', 'in': 'W-bound', 'out': 'E-bound'},
+    '13082': {'name': 'Histon Road', 'in': 'S-bound', 'out': 'N-bound'},
+    '13086': {'name': 'Perne Road', 'in': 'N-bound', 'out': 'S-bound'},
+    }
+
+  var map = new L.Map('map');
+
+  // Various map providers
+  var osm = L.tileLayer.provider('OpenStreetMap.Mapnik');
+  var tf = L.tileLayer.provider('Thunderforest.Neighbourhood', {
+      apikey: TF_API_KEY
+  });
+
+
+  var cambridge = new L.LatLng(52.20038, 0.1197);
+  map.setView(cambridge, 15).addLayer(tf);
+
+  var base_layers = {
+    'Thunderforest': tf,
+    'OSM': osm
+  }
+  L.control.layers(base_layers, {}, {collapsed: false}).addTo(map);
+
+  // Build a lookup index for countlines, and add the line's midpoint
+  var countline_index = {};
+  for (i = 0; i < all_countlines.length; ++i) {
+    var countline = all_countlines[i];
+    countline.location.middle =
+       {'lat': (countline.location.start.lat + countline.location.end.lat)/2,
+        'long': (countline.location.start.long + countline.location.end.long)/2};
+    countline_index[countline.id] = countline;
+  }
+
+  countlines_layer = L.featureGroup();
+
+  console.log('About to draw countlines (via sensors)');
+
+  for (i = 0; i < all_countlines.length; ++i) {
+    var countline = all_countlines[i];
+    var marker = L.circleMarker([countline.location.middle.lat, countline.location.middle.long]).addTo(countlines_layer);
+    if (COUNTLINES.hasOwnProperty(countline.id)) {
+        var popup = L.popup({closeButton: false})
+            .setLatLng([countline.location.middle.lat, countline.location.middle.long])
+           .setContent(COUNTLINES[countline.id].name)
+            .addTo(countlines_layer);
+    }
+  }
+
+
+  map.addLayer(countlines_layer);
+
+  map.fitBounds(countlines_layer.getBounds());
+
+}
+
+    </script>
+    <title>Vivacity sensors</title>
+  </head>
+
+  <body onload="init()">
+
+    <div id="map" style="height: 1200px; border: 1px solid black;"></div>
+
+  </body>
+
+</html>
