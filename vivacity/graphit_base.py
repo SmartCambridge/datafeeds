@@ -127,7 +127,7 @@ def hilight_bridge_closure(ax):
     ax.set_xlim(left, right)
 
 
-def setup_figure(labels):
+def setup_figure(labels, sharey):
 
     ncols = len(labels)
 
@@ -135,7 +135,7 @@ def setup_figure(labels):
         nrows=ROWS_PER_PAGE,
         ncols=ncols,
         sharex=True,
-        sharey=True,
+        sharey=sharey,
         figsize=FIGSIZE)
 
     for col, label in enumerate(labels):
@@ -144,11 +144,12 @@ def setup_figure(labels):
     return fig, axs_list
 
 
-def run_graphs(filename, start, end, labels, function):
+def run_graphs(filename, start, end, labels, function, sharey=True):
     '''
     Draw a set of graphs for both directions on all countlines for the
     period from `start` to `end`. Use `function` to draw each set, and label
-    the columns with `labels`.
+    the columns with `labels`. Set the sharey attribute of the graphs
+    based on `sharey`
 
     `function` has the signature
 
@@ -172,7 +173,7 @@ def run_graphs(filename, start, end, labels, function):
                     if row > 0:
                         fig.tight_layout()
                         pdf.savefig(fig)
-                    fig, axs_list = setup_figure(labels)
+                    fig, axs_list = setup_figure(labels, sharey)
                 # Get the data
                 df = pd.DataFrame(get_data(countline, direction, start, end))
                 df.columns = ('Date',) + VCLASSES
