@@ -9,6 +9,7 @@ import pandas as pd
 
 from matplotlib.pyplot import subplots
 from matplotlib.backends.backend_pdf import PdfPages
+import matplotlib
 
 ONE_DAY = timedelta(days=1)
 MM_TO_INCH = 0.0393701
@@ -127,7 +128,7 @@ def hilight_bridge_closure(ax):
     ax.set_xlim(left, right)
 
 
-def setup_figure(labels, sharey):
+def setup_figure(heading, labels, sharey):
 
     ncols = len(labels)
 
@@ -136,15 +137,78 @@ def setup_figure(labels, sharey):
         ncols=ncols,
         sharex=True,
         sharey=sharey,
-        figsize=FIGSIZE)
+        figsize=FIGSIZE,
+        squeeze=False)
 
     for col, label in enumerate(labels):
         axs_list[0, col].set_title(label)
 
+    fig.suptitle(heading, fontsize=13)
+
     return fig, axs_list
 
 
-def run_graphs(filename, start, end, labels, function, sharey=True):
+def do_bar_graph_by_day(df, ax, col, ymax=None):
+    '''
+    Plot column `col` from data frame `df` onto axis `ax` as a bar graph.
+    '''
+
+    ax.bar(df.index, df[col], zorder=3, align='edge')
+
+    if ymax:
+        ax.set_ylim([0, ymax])
+        if ymax < 1000:
+            ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(base=200))
+            ax.yaxis.set_minor_locator(matplotlib.ticker.MultipleLocator(base=100))
+        elif ymax < 3000:
+            ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(base=1000))
+            ax.yaxis.set_minor_locator(matplotlib.ticker.MultipleLocator(base=200))
+        else:
+            ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(base=2500))
+            ax.yaxis.set_minor_locator(matplotlib.ticker.MultipleLocator(base=500))
+
+    ax.grid(axis='y', zorder=2)
+
+    #ax.xaxis.set_major_locator(matplotlib.dates.WeekdayLocator(byweekday=matplotlib.dates.MO))
+    #ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%d\n%b'))
+    #ax.xaxis.set_minor_locator(matplotlib.dates.DayLocator())
+
+    ax.xaxis.set_major_locator(matplotlib.dates.DayLocator(1))
+    ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%d\n%b\n%Y'))
+    ax.xaxis.set_minor_locator(matplotlib.dates.DayLocator((5, 10, 15, 20, 25)))
+    ax.xaxis.set_minor_formatter(matplotlib.dates.DateFormatter('%d'))
+
+    hilight_bridge_closure(ax)
+
+
+def do_bar_graph_by_hour(df, ax, col, ymax=None):
+    '''
+    Plot column `col` from data frame `df` onto axis `ax` as a bar graph.
+    '''
+
+    ax.bar(df.index, df[col], zorder=3, align='edge')
+
+    if ymax:
+        ax.set_ylim([0, ymax])
+        if ymax < 100:
+            ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(base=10))
+            ax.yaxis.set_minor_locator(matplotlib.ticker.MultipleLocator(base=5))
+        elif ymax < 500:
+            ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(base=50))
+            ax.yaxis.set_minor_locator(matplotlib.ticker.MultipleLocator(base=10))
+        else:
+            ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(base=200))
+            ax.yaxis.set_minor_locator(matplotlib.ticker.MultipleLocator(base=100))
+
+    ax.grid(axis='y', zorder=2)
+
+    ax.set_xlim([0, 24])
+    ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(base=4))
+    ax.xaxis.set_minor_locator(matplotlib.ticker.MultipleLocator(base=1))
+    ax.xaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%02d:00'))
+
+
+def run_graphs(filename, heading, start, end, labels, function, ylabel, sharey=True):
     '''
     Draw a set of graphs for both directions on all countlines for the
     period from `start` to `end`. Use `function` to draw each set, and label
@@ -171,9 +235,9 @@ def run_graphs(filename, start, end, labels, function, sharey=True):
             for direction in ['in', 'out']:
                 if row % ROWS_PER_PAGE == 0:
                     if row > 0:
-                        fig.tight_layout()
+                        fig.tight_layout(rect=[0, 0, 1, 0.96])
                         pdf.savefig(fig)
-                    fig, axs_list = setup_figure(labels, sharey)
+                    fig, axs_list = setup_figure(heading, labels, sharey)
                 # Get the data
                 df = pd.DataFrame(get_data(countline, direction, start, end))
                 df.columns = ('Date',) + VCLASSES
@@ -181,10 +245,10 @@ def run_graphs(filename, start, end, labels, function, sharey=True):
                 # ... and graph it
                 function(df, axs_list[row % ROWS_PER_PAGE])
                 title = (f"{COUNTLINES[countline]['name']}\n"
-                         f"{COUNTLINES[countline][direction]}\n"
-                         "Per day")
+                         f"{COUNTLINES[countline][direction]}\n" +
+                         ylabel)
                 axs_list[row % ROWS_PER_PAGE, 0].set(xlabel='', ylabel=title)
                 row += 1
 
-        fig.tight_layout()
+        fig.tight_layout(rect=[0, 0, 1, 0.96])
         pdf.savefig(fig)
