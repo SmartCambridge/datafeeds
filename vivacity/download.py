@@ -17,16 +17,12 @@ import dateutil.parser
 
 import requests
 
+from graphit_base import COUNTLINES, VCLASSES
+
 FIVE_MINUTES = timedelta(minutes=5)
 ONE_HOUR = timedelta(hours=1)
 ONE_DAY = timedelta(days=1)
 MIDNIGHT = time(tzinfo=timezone.utc)
-
-VCLASSES = (
-    "pedestrian", "cyclist", "motorbike", "car", "taxi", "van",
-    "minibus", "bus", "rigid", "truck", "emergency car",
-    "emergency van", "fire engine"
-)
 
 
 username = os.getenv('USERNAME')
@@ -146,14 +142,15 @@ def store_data(results, directory):
 
 def accumulate_data(results, response, start, duration):
     '''
-    Add API response data in `response` to `results`, assuming that
-    `response` contains data for the period `start` to `start+duration`
-    in 5 minute lumps.
+    Add API response data in `response` to `results` for each countline
+    in COUNTLINES, assuming that `response` contains data for the period
+    `start` to `start+duration` in 5 minute lumps.
 
-    Include counts for all possible classes of vehicle (even if zero)
-    and data for every 5 minute lump, even if all readings are zero (which
-    is why we need `start` and `duration` - we can't derive them from
-    what's in `results` because it could in principle be empty)
+    Include counts for all countlines, for all possible classes of vehicle
+    (even if zero) and data for every 5 minute lump, even if all readings
+    are zero (which is why we need COUNLINES, VCLASSES and `start` and
+    `duration` - we can't derive them from what's in `results` because
+    it could in principle be empty)
 
     API data:
 
@@ -202,7 +199,8 @@ def accumulate_data(results, response, start, duration):
     '''
 
     # For each countline in `response`...
-    for countline, countline_data in response.items():
+    for countline in COUNTLINES:
+        countline_data = response.get(countline, {})
 
         # ...loop over the timestamped observations
         this_time = start
