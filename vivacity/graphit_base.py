@@ -155,6 +155,7 @@ def setup_figure(heading, labels, sharey):
 
     return fig, axs_list
 
+
 def setup_axies(ax, ymax):
     '''
     Common axis setup code
@@ -206,6 +207,23 @@ def do_bar_graph_by_hour(df, ax, col, ymax=None):
     ax.xaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%02d:00'))
 
     ax.grid(axis='y', zorder=2)
+
+
+def do_line_graph_by_day(df, ax, col, ymax=None):
+    '''
+    Plot column `col` from data frame `df` onto axis `ax` as a bar graph.
+    '''
+
+    ax.plot(df.index, df[col], zorder=3)
+
+    setup_axies(ax, ymax)
+
+    locator = ax.xaxis.set_major_locator(matplotlib.dates.AutoDateLocator())
+    ax.xaxis.set_major_formatter(matplotlib.dates.ConciseDateFormatter(locator))
+
+    ax.grid(axis='both', zorder=2)
+
+    hilight_bridge_closure(ax)
 
 
 def run_graphs(filename, heading, start, end, labels, function, ylabel, sharey=True):
