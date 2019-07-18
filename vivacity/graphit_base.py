@@ -11,8 +11,6 @@ from matplotlib.pyplot import subplots
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib
 
-START = date(2019, 5, 10)
-END = date(2019, 7, 17)
 
 ONE_DAY = timedelta(days=1)
 MM_TO_INCH = 0.0393701
@@ -22,6 +20,9 @@ A3L = (420*MM_TO_INCH, 297*MM_TO_INCH)
 
 ROWS_PER_PAGE = 6
 FIGSIZE = A3L
+START = date(2019, 5, 10)
+# Yesterday
+END = date.today() - ONE_DAY
 
 COUNTLINES = {
     '13069': {'name': 'Tennison Road', 'in': 'N-bound', 'out': 'S-bound'},
