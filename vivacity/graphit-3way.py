@@ -1,12 +1,7 @@
 #!/usr/bin/env python3
 
 
-from datetime import date
-
-from graphit_base import run_graphs, do_bar_graph_by_day, do_bar_graph_by_hour
-
-START = date(2019, 5, 10)
-END = date(2019, 7, 14)
+from graphit_base import run_graphs, do_bar_graph_by_day, do_bar_graph_by_hour, START, END
 
 YMAX = 13000
 
@@ -44,7 +39,7 @@ def run():
 
     run_graphs(
         '3way-date.pdf',
-        'Daily traffic',
+        'Traffic',
         START,
         END,
         ('Pedestrian', 'Cyclist', 'Motor'),
@@ -53,7 +48,7 @@ def run():
 
     run_graphs(
         '3way-hour.pdf',
-        f'Average hourly traffic {START.isoformat()} - {END.isoformat()}',
+        f'Average hourly traffic ({START.isoformat()} - {END.isoformat()})',
         START,
         END,
         ('Pedestrian', 'Cyclist', 'Motor'),

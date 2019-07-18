@@ -1,11 +1,6 @@
 #!/usr/bin/env python3
 
-from datetime import date
-
-from graphit_base import run_graphs, do_bar_graph
-
-START = date(2019, 5, 10)
-END = date(2019, 7, 14)
+from graphit_base import run_graphs, do_bar_graph, START, END
 
 YMAX = 13000
 

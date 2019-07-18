@@ -11,6 +11,9 @@ from matplotlib.pyplot import subplots
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib
 
+START = date(2019, 5, 10)
+END = date(2019, 7, 17)
+
 ONE_DAY = timedelta(days=1)
 MM_TO_INCH = 0.0393701
 A4P = (210*MM_TO_INCH, 297*MM_TO_INCH)
@@ -119,11 +122,16 @@ def hilight_bridge_closure(ax):
     '''
 
     left, right = ax.get_xlim()
+
     ax.axvspan(date(2019, 7, 1), date(2019, 8, 24), facecolor='k', alpha=0.1, zorder=1)
     ax.axvspan(date(2019, 7, 5), date(2019, 7, 9), facecolor='k', alpha=0.05, zorder=1)
     ax.axvspan(date(2019, 7, 11), date(2019, 7, 14), facecolor='k', alpha=0.05, zorder=1)
     ax.axvspan(date(2019, 7, 28), date(2019, 8, 1), facecolor='k', alpha=0.05, zorder=1)
     ax.axvspan(date(2019, 8, 3), date(2019, 8, 6), facecolor='k', alpha=0.05, zorder=1)
+
+    # Mill Road closed because of fire 2019-07-16 - 17
+    ax.axvspan(date(2019, 7, 16), date(2019, 7, 18), facecolor='r', alpha=0.1, zorder=1)
+
     # Reset xlim because otherwise the axvspan makes them bigger each time around!
     ax.set_xlim(left, right)
 
@@ -147,6 +155,18 @@ def setup_figure(heading, labels, sharey):
 
     return fig, axs_list
 
+def setup_axies(ax, ymax):
+    '''
+    Common axis setup code
+    '''
+
+    if ymax:
+        ax.set_ylim([0, ymax])
+
+    ax.yaxis.set_major_locator(matplotlib.ticker.AutoLocator())
+    ax.yaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
+    ax.yaxis.set_major_formatter(matplotlib.ticker.StrMethodFormatter('{x:,.0f}'))
+
 
 def do_bar_graph_by_day(df, ax, col, ymax=None):
     '''
@@ -155,28 +175,18 @@ def do_bar_graph_by_day(df, ax, col, ymax=None):
 
     ax.bar(df.index, df[col], zorder=3, align='edge')
 
-    if ymax:
-        ax.set_ylim([0, ymax])
-        if ymax < 1000:
-            ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(base=200))
-            ax.yaxis.set_minor_locator(matplotlib.ticker.MultipleLocator(base=100))
-        elif ymax < 3000:
-            ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(base=1000))
-            ax.yaxis.set_minor_locator(matplotlib.ticker.MultipleLocator(base=200))
-        else:
-            ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(base=2500))
-            ax.yaxis.set_minor_locator(matplotlib.ticker.MultipleLocator(base=500))
-
-    ax.grid(axis='y', zorder=2)
-
-    #ax.xaxis.set_major_locator(matplotlib.dates.WeekdayLocator(byweekday=matplotlib.dates.MO))
-    #ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%d\n%b'))
-    #ax.xaxis.set_minor_locator(matplotlib.dates.DayLocator())
+    setup_axies(ax, ymax)
 
     ax.xaxis.set_major_locator(matplotlib.dates.DayLocator(1))
     ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%d\n%b\n%Y'))
-    ax.xaxis.set_minor_locator(matplotlib.dates.DayLocator((5, 10, 15, 20, 25)))
+    ax.xaxis.set_minor_locator(matplotlib.dates.DayLocator((8, 15, 22)))
     ax.xaxis.set_minor_formatter(matplotlib.dates.DateFormatter('%d'))
+
+    # Make major and minor ticks the same length
+    x_tick_len = ax.xaxis.majorTicks[0].tick1line.get_markersize()
+    ax.tick_params(axis='x', which='minor', length=x_tick_len)
+
+    ax.grid(axis='both', zorder=2)
 
     hilight_bridge_closure(ax)
 
@@ -188,24 +198,14 @@ def do_bar_graph_by_hour(df, ax, col, ymax=None):
 
     ax.bar(df.index, df[col], zorder=3, align='edge')
 
-    if ymax:
-        ax.set_ylim([0, ymax])
-        if ymax < 100:
-            ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(base=10))
-            ax.yaxis.set_minor_locator(matplotlib.ticker.MultipleLocator(base=5))
-        elif ymax < 500:
-            ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(base=50))
-            ax.yaxis.set_minor_locator(matplotlib.ticker.MultipleLocator(base=10))
-        else:
-            ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(base=200))
-            ax.yaxis.set_minor_locator(matplotlib.ticker.MultipleLocator(base=100))
-
-    ax.grid(axis='y', zorder=2)
+    setup_axies(ax, ymax)
 
     ax.set_xlim([0, 24])
     ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(base=4))
     ax.xaxis.set_minor_locator(matplotlib.ticker.MultipleLocator(base=1))
     ax.xaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%02d:00'))
+
+    ax.grid(axis='y', zorder=2)
 
 
 def run_graphs(filename, heading, start, end, labels, function, ylabel, sharey=True):

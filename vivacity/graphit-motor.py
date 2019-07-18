@@ -1,11 +1,6 @@
 #!/usr/bin/env python3
 
-from datetime import date
-
-from graphit_base import run_graphs, do_bar_graph_by_day, do_bar_graph_by_hour
-
-START = date(2019, 5, 10)
-END = date(2019, 7, 14)
+from graphit_base import run_graphs, do_bar_graph_by_day, do_bar_graph_by_hour, START, END
 
 YMAX = 13000
 
@@ -70,7 +65,7 @@ def run():
 
     run_graphs(
         'motor-date.pdf',
-        'Daily motor traffic',
+        'Motor traffic',
         START,
         END,
         ('Cars (incl. Taxis)', 'Goods vehicles (Vans, Rigid and Trucks)',
@@ -81,7 +76,7 @@ def run():
 
     run_graphs(
         'motor-date-fixed.pdf',
-        'Daily motor traffic (uniform Y axis)',
+        'Motor traffic (uniform Y axis)',
         START,
         END,
         ('Cars (incl. Taxis)', 'Goods vehicles (Vans, Rigid and Trucks)',
@@ -92,7 +87,7 @@ def run():
 
     run_graphs(
         'motor-hour.pdf',
-        f'Average hourly motor traffic {START.isoformat()} - {END.isoformat()}',
+        f'Average hourly motor traffic ({START.isoformat()} - {END.isoformat()})',
         START,
         END,
         ('Cars (incl. Taxis)', 'Goods vehicles (Vans, Rigid and Trucks)',
