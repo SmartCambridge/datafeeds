@@ -11,7 +11,7 @@ import json
 import os
 import sys
 
-from datetime import datetime, time, timedelta, timezone
+from datetime import datetime, date, time, timedelta, timezone
 
 import dateutil.parser
 
@@ -270,24 +270,26 @@ def get_days(start, end, path):
 
 def parse_args():
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(epilog='''
+        <first> and <last> can be anything dateutil.parser.parse understands
+        ''')
 
-    parser.add_argument('start', help='first (or only) day to download')
-    parser.add_argument('--end', '-e', help='last day to download')
-    parser.add_argument('--dest', '-d', default='vivacity_data',
-                        help='directory in which to store data')
+    parser.add_argument('last', type=dateutil.parser.parse,
+                        default=(date.today()-ONE_DAY), nargs='?',
+                        help='last (or only) day to download (default yesterday)')
+    parser.add_argument('--dest', default='vivacity_data',
+                        help='directory in which to store data (default \'%(default)s\')')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--first', '-f', type=dateutil.parser.parse,
+                       help='first day to download')
+    group.add_argument('--days', '-d', type=int, help='number of days to download')
 
     args = parser.parse_args()
 
-    try:
-        args.start = dateutil.parser.parse(args.start).date()
-        if args.end:
-            args.end = dateutil.parser.parse(args.end).date()
-        else:
-            args.end = args.start
-    except ValueError as e:
-        print(''.join(e.args), file=sys.stderr)
-        sys.exit(1)
+    if args.days:
+        args.first = args.last - timedelta(days=args.days - 1)
+    elif args.first is None:
+        args.first = args.last
 
     return args
 
@@ -296,7 +298,7 @@ def run():
 
     params = parse_args()
 
-    get_days(params.start, params.end, params.dest)
+    get_days(params.first.date(), params.last.date(), params.dest)
 
 
 if __name__ == '__main__':
