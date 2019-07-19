@@ -3,10 +3,16 @@
 import json
 import matplotlib.pyplot
 import re
+import sys
 
 from datetime import date
 
 import pandas as pd
+
+sys.path.append('../vivacity')
+from graphit_base import hilight_bridge_closure, setup_axies
+
+TO_MPH = 2.23694
 
 DATAFILES = [
     'downloaded_data/2019-05.csv',
@@ -73,15 +79,20 @@ with open('locations.json') as f:
     locations = json.load(f)
 links = {re.sub(r'CAMBRIDGE_JTMS\|', '', record['id']): record for record in locations['links']}
 
+print(links)
+
 # Select morning peak
 df = df.between_time('07:00', '09:00')
 
 for link in LINKS:
 
     df2 = df[df.cosit == link]
+    df2 = df2[df2.index.dayofweek < 5]
+
+    df2['speed'] = (links[link]['length'] / df2['seconds']) * TO_MPH
 
     params = {
-        'seconds': [
+        'speed': [
             min,
             percentile(0.25),
             'median',
@@ -93,7 +104,7 @@ for link in LINKS:
     grouped.columns = grouped.columns.droplevel(level=0)
     print(grouped.head())
 
-    fig, ax = matplotlib.pyplot.subplots(nrows=1, ncols=1)
+    fig, ax = matplotlib.pyplot.subplots(nrows=1, ncols=1, figsize=(10, 7))
 
     ax.errorbar(
         grouped.index,
@@ -102,6 +113,7 @@ for link in LINKS:
         fmt='none',
         elinewidth=1,
         capsize=3,
+        capwidth=2,
         ecolor='k')
 
     ax.errorbar(
@@ -109,10 +121,25 @@ for link in LINKS:
         grouped['median'],
         yerr=[grouped['median'] - grouped['percentile_25'], grouped['percentile_75'] - grouped['median']],
         marker='_',
-        ms=7,
+        mfc='k',
+        mew='1',
+        mec='k',
+        ms=8,
         lw=0,
         elinewidth=4,
         capsize=0)
+
+    hilight_bridge_closure(ax)
+
+    setup_axies(ax, None)
+
+    ax.xaxis.set_major_locator(matplotlib.dates.DayLocator(1))
+    ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('\n%b\n%Y'))
+    ax.xaxis.set_minor_locator(matplotlib.dates.WeekdayLocator(matplotlib.dates.MO))
+    ax.xaxis.set_minor_formatter(matplotlib.dates.DateFormatter('%d'))
+
+    ax.grid(axis='y', which='major', zorder=2)
+    ax.grid(axis='x', which='minor', zorder=2)
 
     matplotlib.pyplot.show()
     matplotlib.pyplot.close()
