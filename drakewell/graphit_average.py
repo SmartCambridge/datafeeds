@@ -22,7 +22,7 @@ A3P = (297*MM_TO_INCH, 420*MM_TO_INCH)
 A3L = (420*MM_TO_INCH, 297*MM_TO_INCH)
 FIGSIZE = A3L
 
-YMAX = 30
+YMAX = 10
 
 DATAFILES = [
     'downloaded_data/2019-05.csv',
@@ -140,17 +140,12 @@ def do_graph(ax, df, link, links, sites):
 
     df2 = df[df.cosit == link]
     df2 = df2[df2.index.dayofweek < 5]
-    df2.index = df2.index.normalize()
 
-    df2['speed'] = (links[link]['length'] / df2['seconds']) * TO_MPH
+    df2 = df2.groupby(df2.index.hour).mean()
 
     df2['minutes'] = df2['seconds']/60
 
-    ax.plot(df2.index, df2['minutes'], '. b')
-
-    df3 = df2.resample('D').mean()
-
-    ax.plot(df3.index, df3['minutes'], '_ k')
+    ax.bar(df2.index, df2['minutes'], align='edge')
 
     left, right = ax.get_xlim()
     ax.axvspan(date(2019, 7, 1), date(2019, 8, 24), facecolor='k', alpha=0.1, zorder=1)
@@ -158,13 +153,12 @@ def do_graph(ax, df, link, links, sites):
 
     setup_axies(ax, YMAX)
 
-    ax.xaxis.set_major_locator(matplotlib.dates.DayLocator(1))
-    ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('\n%b\n%Y'))
-    ax.xaxis.set_minor_locator(matplotlib.dates.WeekdayLocator(matplotlib.dates.MO))
-    ax.xaxis.set_minor_formatter(matplotlib.dates.DateFormatter('%d'))
+    ax.set_xlim([0, 24])
+    ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(base=4))
+    ax.xaxis.set_minor_locator(matplotlib.ticker.MultipleLocator(base=1))
+    ax.xaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%02d:00'))
 
     ax.grid(axis='y', which='major', zorder=2)
-    ax.grid(axis='x', which='minor', zorder=2)
 
     start = sites[links[link]['sites'][0]]
     end = sites[links[link]['sites'][1]]
@@ -173,7 +167,7 @@ def do_graph(ax, df, link, links, sites):
                  fontsize=10)
 
 
-def setup_figure(between):
+def setup_figure():
 
     fig, axs_list = matplotlib.pyplot.subplots(
         nrows=GRAPHS_PER_PAGE // GRAPHS_PER_ROW,
@@ -183,12 +177,12 @@ def setup_figure(between):
         figsize=FIGSIZE,
         squeeze=False)
 
-    fig.suptitle(f'Journey times, Mon-Fri, {between[0]}-{between[1]}', fontsize=13)
+    fig.suptitle(f'Average journey times, Mon-Fri', fontsize=13)
 
     return fig, axs_list
 
 
-def do_graph_set(pdf, df, links, sites, between):
+def do_graph_set(pdf, df, links, sites):
 
     graph = 0
     fig = None
@@ -200,7 +194,7 @@ def do_graph_set(pdf, df, links, sites, between):
                 fig.tight_layout(rect=[0, 0, 1, 0.96])
                 pdf.savefig(fig)
                 print('Page!')
-            fig, axs_list = setup_figure(between)
+            fig, axs_list = setup_figure()
 
         row = (graph % GRAPHS_PER_PAGE) // GRAPHS_PER_ROW
         col = graph % GRAPHS_PER_ROW
@@ -233,13 +227,9 @@ def run():
     links = {re.sub(r'CAMBRIDGE_JTMS\|', '', record['id']): record for record in locations['links']}
     sites = {record['id']: record for record in locations['sites']}
 
-    with matplotlib.backends.backend_pdf.PdfPages('journey_time.pdf') as pdf:
+    with matplotlib.backends.backend_pdf.PdfPages('journey_time_average.pdf') as pdf:
 
-        for between in (('07:00', '09:00'), ('16:00', '18:00')):
-
-            df2 = df.between_time(*between)
-
-            do_graph_set(pdf, df2, links, sites, between)
+            do_graph_set(pdf, df, links, sites)
 
 
 if __name__ == '__main__':
