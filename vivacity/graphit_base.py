@@ -180,15 +180,12 @@ def do_bar_graph_by_day(df, ax, col, ymax=None):
     setup_axies(ax, ymax)
 
     ax.xaxis.set_major_locator(matplotlib.dates.DayLocator(1))
-    ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%d\n%b\n%Y'))
-    ax.xaxis.set_minor_locator(matplotlib.dates.DayLocator((8, 15, 22)))
+    ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('\n%b\n%Y'))
+    ax.xaxis.set_minor_locator(matplotlib.dates.WeekdayLocator(matplotlib.dates.MO))
     ax.xaxis.set_minor_formatter(matplotlib.dates.DateFormatter('%d'))
 
-    # Make major and minor ticks the same length
-    x_tick_len = ax.xaxis.majorTicks[0].tick1line.get_markersize()
-    ax.tick_params(axis='x', which='minor', length=x_tick_len)
-
-    ax.grid(axis='both', zorder=2)
+    ax.grid(axis='y', which='major', zorder=2)
+    ax.grid(axis='x', which='minor', zorder=2)
 
     hilight_bridge_closure(ax)
 
