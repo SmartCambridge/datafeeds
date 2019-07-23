@@ -3,15 +3,10 @@
 import json
 import matplotlib.pyplot
 import re
-import sys
 
 from datetime import date
-from operator import attrgetter
 
 import pandas as pd
-
-sys.path.append('../vivacity')
-from graphit_base import hilight_bridge_closure, setup_axies
 
 TO_MPH = 2.23694
 GRAPHS_PER_ROW = 2
@@ -22,7 +17,7 @@ A3P = (297*MM_TO_INCH, 420*MM_TO_INCH)
 A3L = (420*MM_TO_INCH, 297*MM_TO_INCH)
 FIGSIZE = A3L
 
-YMAX = 10
+YMAX = 30
 
 DATAFILES = [
     'downloaded_data/2019-05.csv',
@@ -70,6 +65,16 @@ LINKS = [
     '9800ZJZCXDYW'
 ]
 
+sites = {}
+links = {}
+
+
+def hilight_bridge_closure(ax):
+
+    left, right = ax.get_xlim()
+    ax.axvspan(date(2019, 7, 1), date(2019, 8, 24), facecolor='k', alpha=0.1, zorder=1)
+    ax.set_xlim(left, right)
+
 
 def percentile(n):
     def percentile_(x):
@@ -78,15 +83,13 @@ def percentile(n):
     return percentile_
 
 
-def do_bar_and_wisker_graph(ax, df, link, length, title):
+def do_bar_and_wisker_graph(ax, df, link):
 
     df2 = df[df.cosit == link]
-    df2 = df2[df2.index.dayofweek < 5]
-
-    df2['speed'] = (length / df2['seconds']) * TO_MPH
+    df2['minutes'] = df2['seconds']/60
 
     params = {
-        'speed': [
+        'minutes': [
             min,
             percentile(0.25),
             'median',
@@ -121,9 +124,7 @@ def do_bar_and_wisker_graph(ax, df, link, length, title):
         elinewidth=4,
         capsize=0)
 
-    ax.axvspan(date(2019, 7, 1), date(2019, 8, 24), facecolor='k', alpha=0.1, zorder=1)
-
-    setup_axies(ax, YMAX)
+    hilight_bridge_closure(ax)
 
     ax.xaxis.set_major_locator(matplotlib.dates.DayLocator(1))
     ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('\n%b\n%Y'))
@@ -133,25 +134,37 @@ def do_bar_and_wisker_graph(ax, df, link, length, title):
     ax.grid(axis='y', which='major', zorder=2)
     ax.grid(axis='x', which='minor', zorder=2)
 
-    ax.set_title(title)
+
+def day_scatter_graph(ax, df, link):
+
+    df2 = df[df.cosit == link].copy()
+    df2.index = df2.index.normalize()
+    df2['minutes'] = df2['seconds']/60
+
+    ax.plot(df2.index, df2['minutes'], '. b')
+
+    df2 = df2.resample('D').mean()
+
+    ax.plot(df2.index, df2['minutes'], '_ k')
+
+    hilight_bridge_closure(ax)
+
+    ax.xaxis.set_major_locator(matplotlib.dates.DayLocator(1))
+    ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('\n%b\n%Y'))
+    ax.xaxis.set_minor_locator(matplotlib.dates.WeekdayLocator(matplotlib.dates.MO))
+    ax.xaxis.set_minor_formatter(matplotlib.dates.DateFormatter('%d'))
+
+    ax.grid(axis='y', which='major', zorder=2)
+    ax.grid(axis='x', which='minor', zorder=2)
 
 
-def do_graph(ax, df, link, links, sites):
+def hourly_average(ax, df, link):
 
     df2 = df[df.cosit == link]
-    df2 = df2[df2.index.dayofweek < 5]
-
     df2 = df2.groupby(df2.index.hour).mean()
-
     df2['minutes'] = df2['seconds']/60
 
     ax.bar(df2.index, df2['minutes'], align='edge')
-
-    left, right = ax.get_xlim()
-    ax.axvspan(date(2019, 7, 1), date(2019, 8, 24), facecolor='k', alpha=0.1, zorder=1)
-    ax.set_xlim(left, right)
-
-    setup_axies(ax, YMAX)
 
     ax.set_xlim([0, 24])
     ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(base=4))
@@ -160,14 +173,8 @@ def do_graph(ax, df, link, links, sites):
 
     ax.grid(axis='y', which='major', zorder=2)
 
-    start = sites[links[link]['sites'][0]]
-    end = sites[links[link]['sites'][1]]
-    ax.set_title(f'{links[link]["name"]}\n{start["description"]} --> '
-                 f'{end["description"]}\n{links[link]["length"]:,.0f} m',
-                 fontsize=10)
 
-
-def setup_figure():
+def setup_figure(title):
 
     fig, axs_list = matplotlib.pyplot.subplots(
         nrows=GRAPHS_PER_PAGE // GRAPHS_PER_ROW,
@@ -177,30 +184,67 @@ def setup_figure():
         figsize=FIGSIZE,
         squeeze=False)
 
-    fig.suptitle(f'Average journey times, Mon-Fri', fontsize=13)
+    fig.suptitle(title, fontsize=13)
 
     return fig, axs_list
 
 
-def do_graph_set(pdf, df, links, sites):
+def setup_axies(ax, ymax):
+    '''
+    Common axis setup code
+    '''
+
+    if ymax:
+        ax.set_ylim([0, ymax])
+
+    ax.yaxis.set_major_locator(matplotlib.ticker.AutoLocator())
+    ax.yaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
+    ax.yaxis.set_major_formatter(matplotlib.ticker.StrMethodFormatter('{x:,.0f}'))
+
+
+def get_drakewell_data():
+
+    global links, sites
+
+    # Slurp link and site details
+    with open('locations.json') as f:
+        locations = json.load(f)
+    links = {re.sub(r'CAMBRIDGE_JTMS\|', '', record['id']): record for record in locations['links']}
+    sites = {record['id']: record for record in locations['sites']}
+
+    df = pd.concat(map(pd.read_csv, DATAFILES))
+    df.columns = ['node', 'cosit', 'timestamp', 'period', 'seconds', 'count']
+    df.index = pd.to_datetime(df['timestamp'])
+    df.drop('timestamp', axis=1, inplace=True)
+
+    return df
+
+
+def do_graph_set(pdf, df, graph_fn, link_list, page_title, ymax):
 
     graph = 0
     fig = None
 
-    for link in LINKS:
+    for link in link_list:
 
         if graph % GRAPHS_PER_PAGE == 0:
             if graph > 0:
                 fig.tight_layout(rect=[0, 0, 1, 0.96])
                 pdf.savefig(fig)
                 print('Page!')
-            fig, axs_list = setup_figure()
+            fig, axs_list = setup_figure(page_title)
 
         row = (graph % GRAPHS_PER_PAGE) // GRAPHS_PER_ROW
         col = graph % GRAPHS_PER_ROW
         print(f'Link: {link}, graph: {graph}, row: {row}, col: {col}')
+        ax = axs_list[row, col]
 
-        do_graph(axs_list[row, col], df, link, links, sites)
+        start_point = sites[links[link]['sites'][0]]
+        end_point = sites[links[link]['sites'][1]]
+        graph_fn(ax, df, link)
+        setup_axies(ax, ymax)
+        ax.set_title(f'{links[link]["name"]}\n{start_point["description"]} --> '
+                     f'{end_point["description"]}\n{links[link]["length"]:,.0f} m')
 
         if col == 0:
             axs_list[row, col].set(ylabel='Journey time (minutes)')
@@ -210,27 +254,3 @@ def do_graph_set(pdf, df, links, sites):
     fig.tight_layout(rect=[0, 0, 1, 0.96])
     pdf.savefig(fig)
     print('Last page!')
-
-
-def run():
-
-    # Slurp the data
-
-    df = pd.concat(map(pd.read_csv, DATAFILES))
-    df.columns = ['node', 'cosit', 'timestamp', 'period', 'seconds', 'count']
-    df.index = pd.to_datetime(df['timestamp'])
-    df.drop('timestamp', axis=1, inplace=True)
-
-    # Slurp link details
-    with open('locations.json') as f:
-        locations = json.load(f)
-    links = {re.sub(r'CAMBRIDGE_JTMS\|', '', record['id']): record for record in locations['links']}
-    sites = {record['id']: record for record in locations['sites']}
-
-    with matplotlib.backends.backend_pdf.PdfPages('journey_time_average.pdf') as pdf:
-
-            do_graph_set(pdf, df, links, sites)
-
-
-if __name__ == '__main__':
-    run()
