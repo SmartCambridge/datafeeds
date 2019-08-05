@@ -23,7 +23,9 @@ zones = ['babraham_road_in', 'babraham_road_out',
          'perne_road_south', 'perne_road_north',
          'east_road_in', 'east_road_out',
          'gonville_place_in', 'gonville_place_out',
-         'lensfield_road_west', 'lensfield_road_east'
+         'lensfield_road_west', 'lensfield_road_east',
+         'madingley_road_outer_in', 'madingley_road_outer_out',
+         'madingley_road_in', 'madingley_road_out',
          ]
 years = [2019]
 
