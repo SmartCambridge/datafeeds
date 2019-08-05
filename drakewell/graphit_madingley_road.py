@@ -25,10 +25,10 @@ def run():
 
             title = f'Journey times, Mon-Fri, {between[0]}-{between[1]}'
 
-            do_graph_set(pdf, df.between_time(*between).copy(), day_scatter_graph, LINKS, title, 40)
+            do_graph_set(pdf, df.between_time(*between).copy(), day_scatter_graph, LINKS, title, 50)
 
         title = 'Average journey times, Mon-Fri'
-        do_graph_set(pdf, df, hourly_average, LINKS, title, 12)
+        do_graph_set(pdf, df, hourly_average, LINKS, title, 15)
 
 
 if __name__ == '__main__':
