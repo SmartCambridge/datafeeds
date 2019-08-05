@@ -125,7 +125,7 @@ def hilight_bridge_closure(ax):
     ax.axvspan(date(2019, 7, 28), date(2019, 8, 1), facecolor='k', alpha=0.05, zorder=1)
     ax.axvspan(date(2019, 8, 3), date(2019, 8, 6), facecolor='k', alpha=0.05, zorder=1)
 
-    BUT alternativly:
+    BUT alternatively:
 
     "The footpath on the bridge will be closed on the following dates:
 
