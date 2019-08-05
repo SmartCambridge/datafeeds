@@ -275,7 +275,7 @@ def parse_args():
         ''')
 
     parser.add_argument('last', type=dateutil.parser.parse,
-                        default=(date.today()-ONE_DAY), nargs='?',
+                        default=(datetime.now()-ONE_DAY), nargs='?',
                         help='last (or only) day to download (default yesterday)')
     parser.add_argument('--dest', default='vivacity_data',
                         help='directory in which to store data (default \'%(default)s\')')
