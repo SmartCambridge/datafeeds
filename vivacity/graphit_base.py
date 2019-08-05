@@ -119,16 +119,33 @@ def hilight_bridge_closure(ax):
 
     https://www.cambridgenetwork.co.uk/news/mill-road-remain-open-while-bridge-closed
 
-    All end dates extended by one day so tht the highlight includes the last day
-    '''
-
-    left, right = ax.get_xlim()
-
     ax.axvspan(date(2019, 7, 1), date(2019, 8, 24), facecolor='k', alpha=0.1, zorder=1)
     ax.axvspan(date(2019, 7, 5), date(2019, 7, 9), facecolor='k', alpha=0.05, zorder=1)
     ax.axvspan(date(2019, 7, 11), date(2019, 7, 14), facecolor='k', alpha=0.05, zorder=1)
     ax.axvspan(date(2019, 7, 28), date(2019, 8, 1), facecolor='k', alpha=0.05, zorder=1)
     ax.axvspan(date(2019, 8, 3), date(2019, 8, 6), facecolor='k', alpha=0.05, zorder=1)
+
+    BUT alternativly:
+
+    "The footpath on the bridge will be closed on the following dates:
+
+    "5th & 6th July 2019 08:45 - 20:45
+    "11th & 12th July 2019 *08:45 - 20:45
+    "28th & 29th July 2019 08:45 - 20:45
+    "3rd & 4th August 2019 08:45 - 20:45"
+
+    http://www.mynewsdesk.com/uk/govia-thameslink-railway/pressreleases/gtr-to-keep-mill-road-bridge-open-to-pedestrians-for-longer-2892507
+
+    All end dates extended by one day so that the highlight includes the last day
+    '''
+
+    left, right = ax.get_xlim()
+
+    ax.axvspan(date(2019, 7, 1), date(2019, 8, 24), facecolor='k', alpha=0.1, zorder=1)
+    ax.axvspan(date(2019, 7, 5), date(2019, 7, 7), facecolor='k', alpha=0.05, zorder=1)
+    ax.axvspan(date(2019, 7, 11), date(2019, 7, 13), facecolor='k', alpha=0.05, zorder=1)
+    ax.axvspan(date(2019, 7, 28), date(2019, 7, 30), facecolor='k', alpha=0.05, zorder=1)
+    ax.axvspan(date(2019, 8, 3), date(2019, 8, 5), facecolor='k', alpha=0.05, zorder=1)
 
     # Mill Road closed because of fire 2019-07-16 - 17
     ax.axvspan(date(2019, 7, 16), date(2019, 7, 18), facecolor='r', alpha=0.1, zorder=1)
