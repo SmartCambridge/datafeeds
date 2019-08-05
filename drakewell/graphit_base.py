@@ -22,7 +22,8 @@ YMAX = 30
 DATAFILES = [
     'downloaded_data/2019-05.csv',
     'downloaded_data/2019-06.csv',
-    'downloaded_data/2019-07.csv'
+    'downloaded_data/2019-07.csv',
+    'downloaded_data/2019-08.csv'
 ]
 
 LINKS = [
