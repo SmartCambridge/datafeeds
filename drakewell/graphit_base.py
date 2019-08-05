@@ -244,8 +244,9 @@ def do_graph_set(pdf, df, graph_fn, link_list, page_title, ymax):
         end_point = sites[links[link]['sites'][1]]
         graph_fn(ax, df, link)
         setup_axies(ax, ymax)
-        ax.set_title(f'{links[link]["name"]}\n{start_point["description"]} --> '
-                     f'{end_point["description"]}\n{links[link]["length"]:,.0f} m')
+        ax.set_title(f'{links[link]["name"]} {links[link]["length"]:,.0f} m\n'
+                     f'{start_point["description"]} --> '
+                     f'{end_point["description"]}', fontsize=9)
 
         if col == 0:
             axs_list[row, col].set(ylabel='Journey time (minutes)')
