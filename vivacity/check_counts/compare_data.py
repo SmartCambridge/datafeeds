@@ -101,8 +101,7 @@ def get_vivacity_data(countline, day, direction):
     df = pd.DataFrame(data)
 
     df.columns = ('date',) + COLS
-    df.index = pd.to_datetime(df['date'])
-    df.index = df.index.tz_localize('UCT')
+    df.index = pd.to_datetime(df['date'], utc=True)
 
     df['v_car'] = df.v_car + df.v_taxi + df.v_minibus + df.v_emerg_car + df.v_emerg_van
     df['v_gall'] = df.v_lgv + df.v_ogv1 + df.v_ogv2
