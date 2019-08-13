@@ -8,6 +8,11 @@ from datetime import date
 
 import pandas as pd
 
+import numpy as np
+
+from pandas.plotting import register_matplotlib_converters
+register_matplotlib_converters()
+
 TO_MPH = 2.23694
 GRAPHS_PER_ROW = 2
 GRAPHS_PER_PAGE = GRAPHS_PER_ROW * 3
@@ -148,6 +153,20 @@ def day_scatter_graph(ax, df, link):
 
     ax.plot(df2.index, df2['minutes'], '_ k')
 
+    # Bridge closes             2019-07-01
+    # First day of holidays     2119-07-25
+    # Bridge opens              2019-08-24
+    # First day of term         2019-09-04
+    df3 = pd.DataFrame(index=df2.index)
+    df3.loc[:, 'ave'] = np.NaN
+    df3.loc[:'2019-06-30', 'ave'] = df2['minutes'][:'2019-06-30'].mean()
+    df3.loc['2019-07-01':'2019-07-24', 'ave'] = df2['minutes']['2019-07-01':'2019-07-24'].mean()
+    df3.loc['2019-07-25':'2019-08-23', 'ave'] = df2['minutes']['2019-07-25':'2019-08-23'].mean()
+    df3.loc['2019-08-24':'2019-09-03', 'ave'] = df2['minutes']['2019-08-24':'2019-09-03'].mean()
+    df3.loc['2019-09-04':, 'ave'] = df2['minutes']['2019-09-04':].mean()
+
+    ax.step(df3.index, df3.ave, 'r--', zorder=3, where='post')
+
     hilight_bridge_closure(ax)
 
     ax.xaxis.set_major_locator(matplotlib.dates.DayLocator(1))
@@ -173,6 +192,7 @@ def hourly_average(ax, df, link):
     ax.xaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%02d:00'))
 
     ax.grid(axis='y', which='major', zorder=2)
+    ax.grid(axis='x', which='major', zorder=2)
 
 
 def setup_figure(title):

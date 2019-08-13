@@ -6,11 +6,15 @@ import os
 from datetime import date, timedelta
 
 import pandas as pd
+from pandas.plotting import register_matplotlib_converters
+
+import numpy as np
 
 from matplotlib.pyplot import subplots
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib
 
+register_matplotlib_converters()
 
 ONE_DAY = timedelta(days=1)
 MM_TO_INCH = 0.0393701
@@ -192,7 +196,23 @@ def do_bar_graph_by_day(df, ax, col, ymax=None):
     Plot column `col` from data frame `df` onto axis `ax` as a bar graph.
     '''
 
+    df[col] = df[col].replace({0: np.nan})
+
     ax.bar(df.index, df[col], zorder=3, align='edge')
+
+    # Bridge closes             2019-07-01
+    # First day of holidays     2119-07-25
+    # Bridge opens              2019-08-24
+    # First day of term         2019-09-04
+    df2 = pd.DataFrame(index=df.index)
+    df2.loc[:, 'ave'] = np.NaN
+    df2.loc[:'2019-06-30', 'ave'] = df[col][:'2019-06-30'].mean()
+    df2.loc['2019-07-01':'2019-07-24', 'ave'] = df[col]['2019-07-01':'2019-07-24'].mean()
+    df2.loc['2019-07-25':'2019-08-23', 'ave'] = df[col]['2019-07-25':'2019-08-23'].mean()
+    df2.loc['2019-08-24':'2019-09-03', 'ave'] = df[col]['2019-08-24':'2019-09-03'].mean()
+    df2.loc['2019-09-04':, 'ave'] = df[col]['2019-09-04':].mean()
+
+    ax.step(df2.index, df2.ave, 'r--', zorder=3, where='post')
 
     setup_axies(ax, ymax)
 
@@ -222,6 +242,7 @@ def do_bar_graph_by_hour(df, ax, col, ymax=None):
     ax.xaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%02d:00'))
 
     ax.grid(axis='y', zorder=2)
+    ax.grid(axis='x', zorder=2)
 
 
 def do_line_graph_by_day(df, ax, col, ymax=None):
@@ -274,7 +295,7 @@ def run_graphs(filename, heading, start, end, labels, function, ylabel, sharey=T
                 # Get the data
                 df = pd.DataFrame(get_data(countline, direction, start, end))
                 df.columns = ('Date',) + VCLASSES
-                df.index = pd.to_datetime(df['Date'])
+                df.index = pd.to_datetime(df['Date'], utc=True)
                 # ... and graph it
                 function(df, axs_list[row % ROWS_PER_PAGE])
                 title = (f"{COUNTLINES[countline]['name']}\n"
