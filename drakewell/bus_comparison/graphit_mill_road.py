@@ -4,6 +4,9 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 from graphit_base import get_traffic_data, do_graph_set, day_scatter_graph, hourly_average
 
+from pandas.plotting import register_matplotlib_converters
+register_matplotlib_converters()
+
 ZONES = [
          'cherry_hinton_road_in',
          'cherry_hinton_road_out',
@@ -34,7 +37,7 @@ def run():
     df = df[df.index.dayofweek < 5]
     df = df['2019-05-01':]
 
-    with PdfPages('journey_time_mill_road_area.pdf') as pdf:
+    with PdfPages('journey_time_mill_road_area_BUS.pdf') as pdf:
 
         for between in (('07:00', '09:00'), ('16:00', '18:00')):
 
