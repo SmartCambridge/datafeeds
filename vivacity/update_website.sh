@@ -2,6 +2,10 @@
 
 TARGET=/Volumes/userfiles/public_html/acp/classified_traffic_0252853452/
 
+echo
+echo "** Remember to update downloaded data if needed..."
+echo
+
 ./graphit-3way.py
 ./graphit-motor.py
 
