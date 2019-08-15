@@ -5,6 +5,8 @@ import os
 
 from datetime import date, timedelta
 
+import pytz
+
 import pandas as pd
 from pandas.plotting import register_matplotlib_converters
 
@@ -247,12 +249,17 @@ def do_bar_graph_by_hour(df, ax, col, ymax=None):
 
 def do_line_graph_by_day(df, ax, col, ymax=None):
     '''
-    Plot column `col` from data frame `df` onto axis `ax` as a bar graph.
+    Plot column `col` from data frame `df` onto axis `ax` as a line graph.
     '''
 
-    ax.plot(df.index, df[col], zorder=3)
+    uk_time = pytz.timezone('Europe/London')
+
+    ax.plot(df.index, df[col], 'b.-', zorder=3)
 
     setup_axies(ax, ymax)
+
+    # Somethng of a hack to get matplotlib to plot localtime azies
+    matplotlib.rcParams['timezone'] = 'Europe/London'
 
     locator = ax.xaxis.set_major_locator(matplotlib.dates.AutoDateLocator())
     ax.xaxis.set_major_formatter(matplotlib.dates.ConciseDateFormatter(locator))
