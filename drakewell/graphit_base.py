@@ -28,7 +28,9 @@ DATAFILES = [
     'downloaded_data/2019-05.csv',
     'downloaded_data/2019-06.csv',
     'downloaded_data/2019-07.csv',
-    'downloaded_data/2019-08.csv'
+    'downloaded_data/2019-08.csv',
+    'downloaded_data/2019-09.csv',
+    'downloaded_data/2019-10.csv'
 ]
 
 LINKS = [
@@ -149,7 +151,7 @@ def day_scatter_graph(ax, df, link):
 
     ax.plot(df2.index, df2['minutes'], '. b')
 
-    df2 = df2.resample('D').mean()
+    df2 = df2.resample('D').median()
 
     ax.plot(df2.index, df2['minutes'], '_ k')
 
@@ -159,11 +161,11 @@ def day_scatter_graph(ax, df, link):
     # First day of term         2019-09-04
     df3 = pd.DataFrame(index=df2.index)
     df3.loc[:, 'ave'] = np.NaN
-    df3.loc[:'2019-06-30', 'ave'] = df2['minutes'][:'2019-06-30'].mean()
-    df3.loc['2019-07-01':'2019-07-24', 'ave'] = df2['minutes']['2019-07-01':'2019-07-24'].mean()
-    df3.loc['2019-07-25':'2019-08-23', 'ave'] = df2['minutes']['2019-07-25':'2019-08-23'].mean()
-    df3.loc['2019-08-24':'2019-09-03', 'ave'] = df2['minutes']['2019-08-24':'2019-09-03'].mean()
-    df3.loc['2019-09-04':, 'ave'] = df2['minutes']['2019-09-04':].mean()
+    df3.loc[:'2019-06-30', 'ave'] = df2['minutes'][:'2019-06-30'].median()
+    df3.loc['2019-07-01':'2019-07-24', 'ave'] = df2['minutes']['2019-07-01':'2019-07-24'].median()
+    df3.loc['2019-07-25':'2019-08-23', 'ave'] = df2['minutes']['2019-07-25':'2019-08-23'].median()
+    df3.loc['2019-08-24':'2019-09-03', 'ave'] = df2['minutes']['2019-08-24':'2019-09-03'].median()
+    df3.loc['2019-09-04':, 'ave'] = df2['minutes']['2019-09-04':].median()
 
     ax.step(df3.index, df3.ave, 'r--', zorder=3, where='post')
 
@@ -246,6 +248,10 @@ def do_graph_set(pdf, df, graph_fn, link_list, page_title, ymax):
     graph = 0
     fig = None
 
+    xmin = df.index.min() - pd.Timedelta(days=7)
+    xmax = df.index.max() + pd.Timedelta(days=7)
+    print(f'xmin: {repr(xmin)}, xmax: {xmax}')
+
     for link in link_list:
 
         if graph % GRAPHS_PER_PAGE == 0:
@@ -259,6 +265,7 @@ def do_graph_set(pdf, df, graph_fn, link_list, page_title, ymax):
         col = graph % GRAPHS_PER_ROW
         print(f'Link: {link}, graph: {graph}, row: {row}, col: {col}')
         ax = axs_list[row, col]
+        ax.set_xlim(xmin, xmax)
 
         start_point = sites[links[link]['sites'][0]]
         end_point = sites[links[link]['sites'][1]]
