@@ -98,7 +98,7 @@ def day_scatter_graph(ax, df, zone):
 
     ax.plot(df2.index, df2['minutes'], '. b')
 
-    df2 = df2.resample('D').mean()
+    df2 = df2.resample('D').median()
 
     ax.plot(df2.index, df2['minutes'], '_ k')
 
@@ -108,11 +108,11 @@ def day_scatter_graph(ax, df, zone):
     # First day of term         2019-09-04
     df3 = pd.DataFrame(index=df2.index)
     df3.loc[:, 'ave'] = np.NaN
-    df3.loc[:'2019-06-30', 'ave'] = df2['minutes'][:'2019-06-30'].mean()
-    df3.loc['2019-07-01':'2019-07-24', 'ave'] = df2['minutes']['2019-07-01':'2019-07-24'].mean()
-    df3.loc['2019-07-25':'2019-08-23', 'ave'] = df2['minutes']['2019-07-25':'2019-08-23'].mean()
-    df3.loc['2019-08-24':'2019-09-03', 'ave'] = df2['minutes']['2019-08-24':'2019-09-03'].mean()
-    df3.loc['2019-09-04':, 'ave'] = df2['minutes']['2019-09-04':].mean()
+    df3.loc[:'2019-06-30', 'ave'] = df2['minutes'][:'2019-06-30'].median()
+    df3.loc['2019-07-01':'2019-07-24', 'ave'] = df2['minutes']['2019-07-01':'2019-07-24'].median()
+    df3.loc['2019-07-25':'2019-08-23', 'ave'] = df2['minutes']['2019-07-25':'2019-08-23'].median()
+    df3.loc['2019-08-24':'2019-09-03', 'ave'] = df2['minutes']['2019-08-24':'2019-09-03'].median()
+    df3.loc['2019-09-04':, 'ave'] = df2['minutes']['2019-09-04':].median()
 
     ax.step(df3.index, df3.ave, 'r--', zorder=3, where='post')
 
