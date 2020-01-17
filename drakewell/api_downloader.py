@@ -103,7 +103,7 @@ def process_locations():
 
     save_file = os.path.join(
         OUTDIR,
-        'link_metadata',
+        'locations',
         'data_bin',
         '{0:%Y}',
         '{0:%m}',
@@ -121,7 +121,7 @@ def process_locations():
 
     current = os.path.join(
         OUTDIR,
-        'link_metadata',
+        'locations',
         'data_monitor',
         'post_data.json'
     )
@@ -141,27 +141,38 @@ def process_locations():
         json.dump(request_data, s)
     os.rename(current_temp, current)
 
-    # data link - data broken down by day and link id
-    # into data_link//<YYYY>/<MM>/<DD>/<LINK_ID>.txt
+    # data link - data for links and compoundRoutes broken down by day
+    # and link id into data_link/<LINK_ID>.json
 
     save_dir = os.path.join(
         OUTDIR,
-        'link_metadata',
-        'data_link',
-        '{0:%Y}',
-        '{0:%m}',
-        '{0:%d}'
+        'locations',
+        'data_link'
     ).format(now)
     os.makedirs(save_dir, exist_ok=True)
 
     for record in itertools.chain(
-          request_data['request_data']['sites'],
           request_data['request_data']['links'],
           request_data['request_data']['compoundRoutes']):
         record['ts'] = request_data['ts']
-        with open(os.path.join(save_dir, record['id'] + '.txt'), mode='a') as f:
-            f.write(json.dumps(record))
-            f.write('\n')
+        with open(os.path.join(save_dir, record['id'] + '.json'), mode='w') as f:
+            json.dump(record, f)
+
+
+    # data site - data for sites broken down by day
+    # and link id into data_site/<SITE_ID>.json
+
+    save_dir = os.path.join(
+        OUTDIR,
+        'link_metadata',
+        'data_site'
+    ).format(now)
+    os.makedirs(save_dir, exist_ok=True)
+
+    for record in request_data['request_data']['sites']:
+        record['ts'] = request_data['ts']
+        with open(os.path.join(save_dir, record['id'] + '.json'), mode='w') as f:
+            json.dump(record, f)
 
 
 process_journeys()
