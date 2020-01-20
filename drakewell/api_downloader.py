@@ -16,7 +16,7 @@ assert LOCATIONS_URL, 'LOCATIONS_URL not set'
 JOURNEYS_URL = os.getenv('JOURNEYS_URL')
 assert JOURNEYS_URL, 'JOURNEYS_URL not set'
 
-OUTDIR = 'drakewell'
+OUTDIR = 'btjourney'
 
 now = datetime.now(tz=timezone.utc)
 
@@ -72,7 +72,7 @@ def process_journeys():
     os.rename(current_temp, current)
 
     # data link - data broken down by day and link id
-    # into data_link//<YYYY>/<MM>/<DD>/<LINK_ID>.txt
+    # into data_link/<YYYY>/<MM>/<DD>/<LINK_ID>_<YYYY>-<MM>-<DD>.txt
 
     save_dir = os.path.join(
         OUTDIR,
@@ -86,7 +86,11 @@ def process_journeys():
 
     for record in request_data['request_data']:
         record['ts'] = request_data['ts']
-        with open(os.path.join(save_dir, record['id'] + '.txt'), mode='a') as f:
+        with open(
+            os.path.join(
+                save_dir,
+                '{0}_{1:%Y}-{1:%m}-{1:%d}.txt'.format(record['id'], now)
+             ), mode='a') as f:
             f.write(json.dumps(record))
             f.write('\n')
 
@@ -164,7 +168,7 @@ def process_locations():
 
     save_dir = os.path.join(
         OUTDIR,
-        'link_metadata',
+        'locations',
         'data_site'
     ).format(now)
     os.makedirs(save_dir, exist_ok=True)
