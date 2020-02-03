@@ -31,6 +31,7 @@ START = date(2019, 5, 10)
 END = date.today() - ONE_DAY
 
 COUNTLINES = {
+
     '13069': {'name': 'Tennison Road', 'in': 'N-bound', 'out': 'S-bound'},
     '13070': {'name': 'Coleridge Road', 'in': 'S-bound', 'out': 'N-bound'},
     '13071': {'name': 'Mill Road (E end)', 'in': 'E-bound', 'out': 'W-bound'},
@@ -41,12 +42,57 @@ COUNTLINES = {
     '13076': {'name': 'Coldhams Lane', 'in': 'S-bound', 'out': 'N-bound'},
     '13077': {'name': 'Mill Road (NW end)', 'in': 'SE-bound', 'out': 'NW-bound'},
     '13078': {'name': 'Carter Bridge', 'in': 'W-bound', 'out': 'E-bound'},
-    '13079': {'name': 'Milton Road', 'in': 'NE-bound', 'out': 'SW-bound'},
-    '13080': {'name': 'Hills Road', 'in': 'S-bound', 'out': 'N-bound'},
+    '13079': {'name': 'Milton Road (original)', 'in': 'NE-bound', 'out': 'SW-bound'},
+    '13080': {'name': 'Hills Road (original)', 'in': 'S-bound', 'out': 'N-bound'},
     '13081': {'name': 'Newmarket Road', 'in': 'W-bound', 'out': 'E-bound'},
-    '13082': {'name': 'Histon Road', 'in': 'S-bound', 'out': 'N-bound'},
+    '13082': {'name': 'Histon Road (original)', 'in': 'S-bound', 'out': 'N-bound'},
     '13086': {'name': 'Perne Road', 'in': 'N-bound', 'out': 'S-bound'},
-    }
+
+
+    '13346': {'name': 'Milton Road (inner)', 'in': 'NE-bound road', 'out': 'SW-bound road'},
+    '13465': {'name': 'Milton Road (inner)', 'in': 'NE-bound foot NW side', 'out': 'SW-bound foot NW side'},
+    '13464': {'name': 'Milton Road (inner)', 'in': 'NE-bound foot SE side', 'out': 'SW-bound foot SE side'},
+
+    '13345': {'name': 'Milton Road (outer)', 'in': 'NE-bound road', 'out': 'SW-bound road'},
+    '13455': {'name': 'Milton Road (outer)', 'in': 'NE-bound foot NW side', 'out': 'SW-bound foot NW side'},
+    '13454': {'name': 'Milton Road (outer)', 'in': 'NE-bound foot SE side', 'out': 'SW-bound foot SE side'},
+
+    '13347': {'name': 'Histon Road (inner)', 'in': 'S-bound road', 'out': 'N-bound road'},
+    '13350': {'name': 'Histon Road (inner)', 'in': 'S-bound foot W side', 'out': 'N-bound foot W side'},
+    '13478': {'name': 'Histon Road (inner)', 'in': 'S-bound foot E side', 'out': 'N-bound foot E side'},
+
+    '13348': {'name': 'Histon Road (outer)', 'in': 'N-bound road', 'out': 'S-bound road'},
+    '13467': {'name': 'Histon Road (outer)', 'in': 'N-bound foot W side', 'out': 'S-bound foot W side'},
+    '13466': {'name': 'Histon Road (outer)', 'in': 'N-bound foot E side', 'out': 'S-bound foot E side'},
+
+
+    '13435': {'name': 'Long Road', 'in': 'E-bound road', 'out': 'W-bound road'},
+    '13458': {'name': 'Long Road', 'in': 'E-bound foot N side', 'out': 'W-bound foot N side'},
+    '13459': {'name': 'Long Road', 'in': 'E-bound foot S side', 'out': 'W-bound foot S side'},
+
+    '13436': {'name': 'Hills Road', 'in': 'N-bound road', 'out': 'S-bound road'},
+    '13470': {'name': 'Hills Road', 'in': 'N-bound foot W side', 'out': 'S-bound foot W side'},
+    '13471': {'name': 'Hills Road', 'in': 'N-bound foot E side', 'out': 'S-bound foot E side'},
+
+    '13437': {'name': 'Fendon Road', 'in': 'SW-bound', 'out': 'NE-bound'},
+
+    '13438': {'name': 'Nightingale Ave', 'in': 'NE-bound road', 'out': 'SW-bound road'},
+    '13473': {'name': 'Nightingale Ave', 'in': 'NE-bound foot NW side', 'out': 'SW-bound foot NW side'},
+    '13472': {'name': 'Nightingale Ave', 'in': 'NE-bound foot SE side', 'out': 'SW-bound foot SE side'},
+
+    '13434': {'name': 'Mowbray Road', 'in': 'NE-bound road', 'out': 'SW-bound road'},
+    '13461': {'name': 'Mowbray Road', 'in': 'NE-bound foot NW side', 'out': 'SW-bound foot NW side'},
+    '13460': {'name': 'Mowbray Road', 'in': 'NE-bound foot SE side', 'out': 'SW-bound foot SE side'},
+
+    '13444': {'name': 'Wulfstan Way', 'in': 'SW-bound road', 'out': 'NE-bound road'},
+    '13457': {'name': 'Wulfstan Way', 'in': 'SW-bound foot NW side', 'out': 'NE-bound foot NW side'},
+    '13456': {'name': 'Wulfstan Way', 'in': 'SW-bound foot SE side', 'out': 'NE-bound foot SE side'},
+
+    '13446': {'name': 'Queen Edith\' Way', 'in': 'SW-bound road', 'out': 'NE-bound road'},
+    '13462': {'name': 'Queen Edith\' Way', 'in': 'SW-bound foot NW side', 'out': 'NE-bound foot NW side'},
+    '13463': {'name': 'Queen Edith\' Way', 'in': 'SW-bound foot SE side', 'out': 'NE-bound foot SE side'},
+
+}
 
 
 VCLASSES = ("pedestrian", "cyclist", "motorbike", "car",
@@ -221,12 +267,14 @@ def do_bar_graph_by_day(df, ax, col, ymax=None):
     ax.xaxis.set_major_locator(matplotlib.dates.DayLocator(1))
     ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('\n%b\n%Y'))
     ax.xaxis.set_minor_locator(matplotlib.dates.WeekdayLocator(matplotlib.dates.MO))
-    ax.xaxis.set_minor_formatter(matplotlib.dates.DateFormatter('%d'))
+    # ax.xaxis.set_minor_formatter(matplotlib.dates.DateFormatter('%d'))
 
     ax.grid(axis='y', which='major', zorder=2)
     ax.grid(axis='x', which='minor', zorder=2)
 
-    hilight_bridge_closure(ax)
+    ax.set_xlim(START, END)
+
+    #hilight_bridge_closure(ax)
 
 
 def do_bar_graph_by_hour(df, ax, col, ymax=None):
@@ -266,7 +314,7 @@ def do_line_graph_by_day(df, ax, col, ymax=None):
 
     ax.grid(axis='both', zorder=2)
 
-    hilight_bridge_closure(ax)
+    #hilight_bridge_closure(ax)
 
 
 def run_graphs(filename, heading, start, end, labels, function, ylabel, sharey=True):
@@ -294,22 +342,27 @@ def run_graphs(filename, heading, start, end, labels, function, ylabel, sharey=T
     with PdfPages(filename) as pdf:
         for countline in sorted(COUNTLINES.keys(), key=lambda k: COUNTLINES[k]['name']):
             for direction in ['in', 'out']:
+                # print('Countline {} direction {}'.format(countline, direction))
                 if row % ROWS_PER_PAGE == 0:
                     if row > 0:
                         fig.tight_layout(rect=[0, 0, 1, 0.96])
                         pdf.savefig(fig)
+                        fig.clf()
                     fig, axs_list = setup_figure(heading, labels, sharey)
                 # Get the data
                 df = pd.DataFrame(get_data(countline, direction, start, end))
-                df.columns = ('Date',) + VCLASSES
-                df.index = pd.to_datetime(df['Date'], utc=True)
-                # ... and graph it
-                function(df, axs_list[row % ROWS_PER_PAGE])
-                title = (f"{COUNTLINES[countline]['name']}\n"
-                         f"{COUNTLINES[countline][direction]}\n" +
-                         ylabel)
-                axs_list[row % ROWS_PER_PAGE, 0].set(xlabel='', ylabel=title)
-                row += 1
+                if df.empty:
+                    print('No data for {} direction {}'.format(COUNTLINES[countline]['name'], COUNTLINES[countline][direction]))
+                else:
+                    df.columns = ('Date',) + VCLASSES
+                    df.index = pd.to_datetime(df['Date'], utc=True)
+                    # ... and graph it
+                    function(df, axs_list[row % ROWS_PER_PAGE])
+                    title = (f"{COUNTLINES[countline]['name']}\n"
+                             f"{COUNTLINES[countline][direction]}\n" +
+                             ylabel)
+                    axs_list[row % ROWS_PER_PAGE, 0].set(xlabel='', ylabel=title)
+                    row += 1
 
         fig.tight_layout(rect=[0, 0, 1, 0.96])
         pdf.savefig(fig)
