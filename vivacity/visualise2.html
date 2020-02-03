@@ -37,32 +37,55 @@ function init(){
     '13071': {'name': 'Mill Road (E end)', 'in': 'E-bound', 'out': 'W-bound'},
     '13072': {'name': 'Vinery Road', 'in': 'S-bound', 'out': 'N-bound'},
     '13073': {'name': 'Cherry Hinton Road', 'in': 'E-bound', 'out': 'W-bound'},
-    '13074': {'name': 'Station Road', 'in': 'W-bound', 'out': 'W-bound'},
+    '13074': {'name': 'Station Road', 'in': 'W-bound', 'out': 'E-bound'},
     '13075': {'name': 'East Road', 'in': 'NE-bound', 'out': 'SW-bound'},
     '13076': {'name': 'Coldhams Lane', 'in': 'S-bound', 'out': 'N-bound'},
     '13077': {'name': 'Mill Road (NW end)', 'in': 'SE-bound', 'out': 'NW-bound'},
     '13078': {'name': 'Carter Bridge', 'in': 'W-bound', 'out': 'E-bound'},
-    '13079': {'name': 'Milton Road', 'in': 'NE-bound', 'out': 'SW-bound'},
-    '13080': {'name': 'Hills Road', 'in': 'S-bound', 'out': 'N-bound'},
+    '13079': {'name': 'Milton Road (original)', 'in': 'NE-bound', 'out': 'SW-bound'},
+    '13080': {'name': 'Hills Road (original)', 'in': 'S-bound', 'out': 'N-bound'},
     '13081': {'name': 'Newmarket Road', 'in': 'W-bound', 'out': 'E-bound'},
-    '13082': {'name': 'Histon Road', 'in': 'S-bound', 'out': 'N-bound'},
+    '13082': {'name': 'Histon Road (original)', 'in': 'S-bound', 'out': 'N-bound'},
     '13086': {'name': 'Perne Road', 'in': 'N-bound', 'out': 'S-bound'},
+
+
+    '13346': {'name': 'Milton Road (inner)', 'in': 'NE-bound road', 'out': 'SW-bound road'},
+
+
+    '13345': {'name': 'Milton Road (outer)', 'in': 'NE-bound road', 'out': 'SW-bound road'},
+
+
+    '13347': {'name': 'Histon Road (inner)', 'in': 'S-bound road', 'out': 'N-bound road'},
+
+    '13348': {'name': 'Histon Road (outer)', 'in': 'N-bound road', 'out': 'S-bound road'},
+
+    '13435': {'name': 'Long Road', 'in': 'E-bound road', 'out': 'W-bound road'},
+
+    '13436': {'name': 'Hills Road', 'in': 'N-bound road', 'out': 'W-bound road'},
+
+    '13437': {'name': 'Fendon Road', 'in': 'SW-bound', 'out': 'NE-bound'},
+
+    '13438': {'name': 'Nightingale Ave', 'in': 'NE-bound road', 'out': 'SW-bound road'},
+
+    '13434': {'name': 'Mowbray Road', 'in': 'NE-bound road', 'out': 'SW-bound road'},
+
+    '13444': {'name': 'Wulfstan Way', 'in': 'SW-bound road', 'out': 'NE-bound road'},
+
+    '13446': {'name': 'Queen Edith\' Way', 'in': 'SW-bound road', 'out': 'NE-bound road'},
+
+
     }
 
   var map = new L.Map('map');
 
   // Various map providers
   var osm = L.tileLayer.provider('OpenStreetMap.Mapnik');
-  var tf = L.tileLayer.provider('Thunderforest.Neighbourhood', {
-      apikey: TF_API_KEY
-  });
 
 
   var cambridge = new L.LatLng(52.20038, 0.1197);
-  map.setView(cambridge, 15).addLayer(tf);
+  map.setView(cambridge, 15).addLayer(osm);
 
   var base_layers = {
-    'Thunderforest': tf,
     'OSM': osm
   }
   L.control.layers(base_layers, {}, {collapsed: false}).addTo(map);
@@ -105,7 +128,7 @@ function init(){
 
   <body onload="init()">
 
-    <div id="map" style="height: 1200px; border: 1px solid black;"></div>
+    <div id="map" style="height: 1000px; border: 1px solid black;"></div>
 
   </body>
 
