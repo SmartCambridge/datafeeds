@@ -10,8 +10,9 @@ import argparse
 import json
 import os
 import sys
+import time as stdlib_time
 
-from datetime import datetime, date, time, timedelta, timezone
+from datetime import datetime, time, timedelta, timezone
 
 import dateutil.parser
 
@@ -65,26 +66,43 @@ def get_data(start, duration):
     Get raw data for time range `start` to `start+duration`
     '''
 
-    # Get or renew the token as needed
-    if not token or (datetime.utcnow()-token['ts']).total_seconds() > 0.9*token['expires_in']:
-        get_token()
-
-    headers = {
-        'api-version': '2',
-        'Authorization': 'Bearer ' + token['access_token']
-    }
-
     params = {
         'timeFrom': vivacity_time(start),
         'timeTo': vivacity_time(start+duration),
     }
 
-    r = requests.get(
-        'https://api.vivacitylabs.com/counts',
-        params=params,
-        headers=headers
-    )
+    retries = 0
+
+    while True:
+
+        print('Trying {} from {}'.format(duration, start.isoformat()))
+
+        # Get or renew the token as needed
+        if not token or (datetime.utcnow()-token['ts']).total_seconds() > 0.9*token['expires_in']:
+            get_token()
+
+        headers = {
+            'api-version': '2',
+            'Authorization': 'Bearer ' + token['access_token']
+        }
+
+        r = requests.get(
+            'https://api.vivacitylabs.com/counts',
+            params=params,
+            headers=headers
+        )
+
+        if r.ok or retries > 10:
+            break
+
+        print("Error: {} {} - retrying in {} sec".format(r.status_code, r.reason, 30 * retries))
+        if retries > 0:
+            stdlib_time.sleep(30 * retries)
+
+        retries += 1
+
     r.raise_for_status()
+
     if r.status_code == 204:
         return {}
     else:
