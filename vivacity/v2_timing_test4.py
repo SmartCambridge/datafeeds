@@ -99,9 +99,11 @@ def run():
 
     now = datetime.datetime.now()
 
-    print("Now: ", now.isoformat())
+    print("Now: ", datetime.datetime.now().isoformat())
 
     first_counts = get_counts(token, countlines=['13074'])
+
+    print(json.dumps(first_counts, indent=4))
 
     start = parse(first_counts['13074']['from'])
     end = parse(first_counts['13074']['to'])
@@ -118,10 +120,10 @@ def run():
         diff = DeepDiff(first_counts, second_counts)
 
         if diff:
-            print(now.isoformat(), "Changed")
+            print(datetime.datetime.now().isoformat(), "Changed")
             print(json.dumps(diff, indent=4))
         else:
-            print(now.isoformat(), "No change")
+            print(datetime.datetime.now().isoformat(), "No change")
 
         first_counts = second_counts
 
