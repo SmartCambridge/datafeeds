@@ -5,3 +5,5 @@ latest_counts.js
 *.pdf
 .ipynb_checkpoints/
 vivacity_data/
+*.csv
+

@@ -4,4 +4,5 @@ setup_env.js
 __pycache__/
 venv/
 secrets/
+*.gz
 
